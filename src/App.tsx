@@ -14,11 +14,13 @@ import {
   arrayToBoardState,
   boardStateToArray,
   canAssignPlayerToSlot,
+  clearSlotPayload,
   createInitialBoardState,
   moveSlotPayload,
   upsertSlotPayload,
   type BoardState
 } from "./lib/boardModel";
+import { resolveSeasonIdFromEnv } from "./lib/season";
 import { ensureShareTokenInUrl } from "./lib/shareToken";
 import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
@@ -29,12 +31,12 @@ interface AppProps {
 }
 
 function defaultMeta(shareToken: string): BoardMeta {
-  const defaultSeason = (import.meta.env.VITE_DEFAULT_SEASON_ID || "2026").trim();
+  const defaultSeason = resolveSeasonIdFromEnv(import.meta.env.VITE_DEFAULT_SEASON_ID, new Date());
   const defaultGender = import.meta.env.VITE_DEFAULT_GENDER === "female" ? "female" : "male";
   return {
     shareToken,
     title: "Scouting ShortList",
-    seasonId: defaultSeason || "2026",
+    seasonId: defaultSeason,
     gender: defaultGender,
     updatedAt: new Date().toISOString()
   };
@@ -158,6 +160,11 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
     setState((prev) => upsertSlotPayload(prev, slotKey, patch));
   }
 
+  function clearSlot(slotKey: string): void {
+    setBannerMessage("");
+    setState((prev) => clearSlotPayload(prev, slotKey));
+  }
+
   function onApplyPlayer(patch: SlotPayload): void {
     if (!pickerSlotKey) {
       return;
@@ -231,10 +238,12 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
           </h2>
           <DndContext sensors={sensors} onDragEnd={onDragEnd}>
             <ScenarioGrid
+              apiBaseUrl={apiBaseUrl}
               positionId={tab}
               state={state}
               duplicateSlotKeys={duplicateSlotKeys}
               onPatchSlot={(slotKey, patch) => patchSlot(slotKey, patch)}
+              onClearSlot={clearSlot}
               onOpenPicker={(slotKey) => {
                 setBannerMessage("");
                 setPickerSlotKey(slotKey);

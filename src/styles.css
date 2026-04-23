@@ -366,6 +366,7 @@ main {
 }
 
 .pick-btn,
+.clear-btn,
 .drag-handle {
   border: 1px solid var(--line);
   background: #fff;
@@ -373,6 +374,22 @@ main {
   font-size: 0.75rem;
   padding: 5px 7px;
   cursor: pointer;
+}
+
+.slot-actions .pick-btn {
+  flex: 1 1 auto;
+}
+
+.clear-btn {
+  border-color: #d9b5b5;
+  background: #fff5f5;
+  color: #8f231f;
+  white-space: nowrap;
+}
+
+.clear-btn:hover {
+  background: #ffeaea;
+  border-color: #cc8686;
 }
 
 .drag-handle {

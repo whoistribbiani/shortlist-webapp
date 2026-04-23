@@ -201,6 +201,27 @@ function resolveScoutasticMediaUrl(raw: string, baseUrl: string): string {
   }
 }
 
+function resolveScoutasticImageRequestUrl(source: string, baseUrl: string): URL | null {
+  const src = clean(source);
+  if (!src) {
+    return null;
+  }
+  let candidate: URL;
+  const scoutasticBase = new URL(baseUrl);
+  try {
+    candidate = new URL(src);
+  } catch {
+    candidate = new URL(src, `${scoutasticBase.origin}/`);
+  }
+  if (!["http:", "https:"].includes(candidate.protocol)) {
+    return null;
+  }
+  if (candidate.hostname.toLowerCase() !== scoutasticBase.hostname.toLowerCase()) {
+    return null;
+  }
+  return candidate;
+}
+
 async function scoutasticGet(
   path: string,
   params: Record<string, string | number | boolean | undefined | null>
@@ -334,6 +355,29 @@ async function fetchPlayersByTeam(teamId: string, seasonId: string) {
     playerImageUrl: resolveScoutasticMediaUrl(clean(player.imageUrlV2) || clean(player.imageUrl), baseUrl),
     teams: Array.isArray(player.teams) ? player.teams : []
   }));
+}
+
+async function proxyScoutasticPlayerImage(source: string): Promise<Response> {
+  const { baseUrl, accessKey } = scoutasticConfig();
+  const imageUrl = resolveScoutasticImageRequestUrl(source, baseUrl);
+  if (!imageUrl) {
+    return jsonResponse({ error: "Invalid image source" }, 400);
+  }
+
+  const response = await fetch(imageUrl.toString(), {
+    headers: {
+      Authorization: `Bearer ${accessKey}`
+    }
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    return jsonResponse({ error: text || `Scoutastic image proxy failed (${response.status})` }, response.status);
+  }
+
+  const headers = new Headers(CORS_HEADERS);
+  headers.set("Content-Type", response.headers.get("content-type") || "application/octet-stream");
+  headers.set("Cache-Control", "public, max-age=1800");
+  return new Response(response.body, { status: 200, headers });
 }
 
 async function ensureBoard(shareToken: string) {
@@ -673,6 +717,15 @@ Deno.serve(async (request) => {
       }
       const players = await fetchPlayersByTeam(teamId, seasonId);
       return jsonResponse({ players });
+    }
+
+    if (segments[0] === "catalog" && segments[1] === "player-image" && method === "GET") {
+      const url = new URL(request.url);
+      const source = clean(url.searchParams.get("src"));
+      if (!source) {
+        return jsonResponse({ error: "src is required" }, 400);
+      }
+      return proxyScoutasticPlayerImage(source);
     }
 
     if (segments[0] === "board" && segments[1] && method === "GET") {

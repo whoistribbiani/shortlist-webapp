@@ -47,6 +47,20 @@ export function upsertSlotPayload(
   };
 }
 
+export function clearSlotPayload(state: BoardState, slotKey: string): BoardState {
+  const current = state[slotKey];
+  if (!current) {
+    return state;
+  }
+  return {
+    ...state,
+    [slotKey]: {
+      ...current,
+      ...EMPTY_SLOT_PAYLOAD
+    }
+  };
+}
+
 export function canAssignPlayerToSlot(state: BoardState, targetSlotKey: string, playerId: string): boolean {
   if (!playerId.trim()) {
     return true;

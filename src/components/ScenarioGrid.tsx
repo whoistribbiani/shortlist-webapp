@@ -5,18 +5,22 @@ import type { PositionId, SlotEntry } from "../types";
 import { SlotCard } from "./SlotCard";
 
 interface ScenarioGridProps {
+  apiBaseUrl: string;
   positionId: PositionId;
   state: BoardState;
   duplicateSlotKeys: Set<string>;
   onPatchSlot: (slotKey: string, patch: Partial<SlotEntry>) => void;
+  onClearSlot: (slotKey: string) => void;
   onOpenPicker: (slotKey: string) => void;
 }
 
 export function ScenarioGrid({
+  apiBaseUrl,
   positionId,
   state,
   duplicateSlotKeys,
   onPatchSlot,
+  onClearSlot,
   onOpenPicker
 }: ScenarioGridProps): JSX.Element {
   return (
@@ -52,11 +56,13 @@ export function ScenarioGrid({
                 const slot = state[slotKey];
                 return (
                   <SlotCard
+                    apiBaseUrl={apiBaseUrl}
                     key={slotKey}
                     slotKey={slotKey}
                     slot={slot}
                     duplicateBlocked={duplicateSlotKeys.has(slotKey)}
                     onPatch={onPatchSlot}
+                    onClearSlot={onClearSlot}
                     onOpenPicker={onOpenPicker}
                   />
                 );

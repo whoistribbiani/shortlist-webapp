@@ -1,7 +1,6 @@
 import { EMPTY_SLOT_PAYLOAD } from "../constants/layout";
 import type { PlayerApiDoc, PlayerApiTeam, SlotPayload } from "../types";
-
-const SCOUTASTIC_ORIGIN = "https://genoacfc.scoutastic.com";
+import { resolveScoutasticMediaUrl } from "./scoutasticMedia";
 
 function clean(value: string | undefined): string {
   return (value ?? "").trim();
@@ -32,18 +31,7 @@ function isoDateToYear(input: string | undefined): string {
 
 function resolvePlayerImageUrl(player: PlayerApiDoc): string {
   const raw = clean(player.playerImageUrl) || clean(player.imageUrlV2) || clean(player.imageUrl);
-  if (!raw) {
-    return "";
-  }
-  try {
-    return new URL(raw).toString();
-  } catch {
-    try {
-      return new URL(raw, `${SCOUTASTIC_ORIGIN}/`).toString();
-    } catch {
-      return "";
-    }
-  }
+  return resolveScoutasticMediaUrl(raw);
 }
 
 export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: string): SlotPayload {

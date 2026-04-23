@@ -12,6 +12,9 @@ const emptyBoardResponse = {
 };
 
 test("selects a player with autocomplete flow and enriches the slot", async ({ page }) => {
+  let hasImageProxyRequest = false;
+  page.on("dialog", (dialog) => dialog.accept());
+
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -51,6 +54,18 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
             }
           ]
         })
+      });
+    }
+    if (route.request().method() === "GET" && path.includes("/catalog/player-image")) {
+      hasImageProxyRequest = true;
+      const onePixelPng = Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N7V8AAAAASUVORK5CYII=",
+        "base64"
+      );
+      return route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: onePixelPng
       });
     }
     if (route.request().method() === "GET" && path.includes("/board/")) {
@@ -96,12 +111,20 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(firstCard).toHaveAttribute("data-state", "filled");
   await expect(firstCard.getByLabel("Player")).toHaveValue("Beydts");
   await expect(firstCard.getByLabel("Name")).toHaveValue("Antoine");
-  await expect(firstCard.locator(".slot-thumb")).toHaveAttribute("src", "https://example.test/antoine.png");
+  await expect(firstCard.locator(".slot-thumb")).toHaveAttribute("src", /\/api\/catalog\/player-image\?src=/);
   await expect(firstCard.locator(".slot-player-link")).toHaveAttribute(
     "href",
     "https://genoacfc.scoutastic.com/#/player/internal-1"
   );
+  expect(hasImageProxyRequest).toBe(true);
 
   await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abc");
   await expect(firstCard.getByLabel("Video")).toHaveValue("https://onedrive.live.com/watch?v=abc");
+
+  await firstCard.locator(".clear-btn").evaluate((element) => {
+    (element as HTMLButtonElement).click();
+  });
+  await expect(firstCard).toHaveAttribute("data-state", "empty");
+  await expect(firstCard.getByLabel("Player")).toHaveValue("");
+  await expect(firstCard.getByLabel("Name")).toHaveValue("");
 });

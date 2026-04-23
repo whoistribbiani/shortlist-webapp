@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { canAssignPlayerToSlot, createInitialBoardState, moveSlotPayload, upsertSlotPayload } from "../boardModel";
+import {
+  clearSlotPayload,
+  canAssignPlayerToSlot,
+  createInitialBoardState,
+  moveSlotPayload,
+  upsertSlotPayload
+} from "../boardModel";
 import { buildSlotKey } from "../slotKey";
 
 describe("boardModel", () => {
@@ -82,5 +88,53 @@ describe("boardModel", () => {
     expect(moved[targetKey].playerInternalId).toBe("internal-11");
     expect(moved[targetKey].playerImageUrl).toBe("https://example.test/player.png");
     expect(moved[targetKey].videoUrl).toBe("https://onedrive.live.com/video");
+  });
+
+  it("clears payload while preserving coordinates", () => {
+    const state = createInitialBoardState();
+    const slotKey = buildSlotKey({
+      positionId: "11-ST",
+      rank: 1,
+      scenario: "0-2",
+      lane: "A1B1"
+    });
+
+    const withPlayer = upsertSlotPayload(state, slotKey, {
+      name: "Antoine",
+      player: "Beydts",
+      playerId: "player-1",
+      playerInternalId: "internal-1",
+      playerImageUrl: "https://example.test/player.png",
+      videoUrl: "https://video.test/id"
+    });
+    const cleared = clearSlotPayload(withPlayer, slotKey);
+
+    expect(cleared[slotKey].positionId).toBe("11-ST");
+    expect(cleared[slotKey].rank).toBe(1);
+    expect(cleared[slotKey].player).toBe("");
+    expect(cleared[slotKey].playerId).toBe("");
+    expect(cleared[slotKey].playerInternalId).toBe("");
+    expect(cleared[slotKey].playerImageUrl).toBe("");
+    expect(cleared[slotKey].videoUrl).toBe("");
+  });
+
+  it("allows reusing same player in position after clear", () => {
+    const state = createInitialBoardState();
+    const sourceKey = buildSlotKey({
+      positionId: "3-LWB",
+      rank: 1,
+      scenario: "0-2",
+      lane: "A1B1"
+    });
+    const targetKey = buildSlotKey({
+      positionId: "3-LWB",
+      rank: 2,
+      scenario: "2-5",
+      lane: "A2"
+    });
+
+    const withPlayer = upsertSlotPayload(state, sourceKey, { playerId: "p-1", player: "TEST PLAYER" });
+    const cleared = clearSlotPayload(withPlayer, sourceKey);
+    expect(canAssignPlayerToSlot(cleared, targetKey, "p-1")).toBe(true);
   });
 });

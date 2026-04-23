@@ -1,13 +1,17 @@
+import { useEffect, useMemo, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
+import { buildPlayerImageProxyUrl } from "../lib/scoutasticMedia";
 import type { SlotEntry } from "../types";
 
 interface SlotCardProps {
+  apiBaseUrl: string;
   slotKey: string;
   slot: SlotEntry;
   duplicateBlocked: boolean;
   onPatch: (slotKey: string, patch: Partial<SlotEntry>) => void;
+  onClearSlot: (slotKey: string) => void;
   onOpenPicker: (slotKey: string) => void;
 }
 
@@ -28,7 +32,15 @@ function scoutasticPlayerUrl(internalId: string): string {
   return `https://genoacfc.scoutastic.com/#/player/${encodeURIComponent(internalId)}`;
 }
 
-export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicker }: SlotCardProps): JSX.Element {
+export function SlotCard({
+  apiBaseUrl,
+  slotKey,
+  slot,
+  duplicateBlocked,
+  onPatch,
+  onClearSlot,
+  onOpenPicker
+}: SlotCardProps): JSX.Element {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: slotKey });
   const filled = isPopulated(slot);
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
@@ -48,6 +60,15 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
     .join(" ");
 
   const canLinkProfile = !!slot.playerInternalId;
+  const [imgError, setImgError] = useState(false);
+  const proxyImageUrl = useMemo(
+    () => buildPlayerImageProxyUrl(apiBaseUrl, slot.playerImageUrl),
+    [apiBaseUrl, slot.playerImageUrl]
+  );
+
+  useEffect(() => {
+    setImgError(false);
+  }, [slot.playerImageUrl]);
 
   return (
     <div ref={setDropRef} className="slot-drop-zone">
@@ -56,6 +77,20 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
           <button type="button" className="pick-btn" onClick={() => onOpenPicker(slotKey)}>
             Seleziona player
           </button>
+          {filled && (
+            <button
+              type="button"
+              className="clear-btn"
+              onClick={() => {
+                if (!window.confirm("Rimuovere il player da questo slot?")) {
+                  return;
+                }
+                onClearSlot(slotKey);
+              }}
+            >
+              Rimuovi player
+            </button>
+          )}
           <button type="button" className="drag-handle" {...listeners} {...attributes} aria-label="Drag slot">
             :::
           </button>
@@ -63,8 +98,14 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
 
         {filled && (
           <div className="slot-player-head">
-            {slot.playerImageUrl ? (
-              <img className="slot-thumb" src={slot.playerImageUrl} alt={slot.player || "Player"} loading="lazy" />
+            {proxyImageUrl && !imgError ? (
+              <img
+                className="slot-thumb"
+                src={proxyImageUrl}
+                alt={slot.player || "Player"}
+                loading="lazy"
+                onError={() => setImgError(true)}
+              />
             ) : (
               <div className="slot-thumb slot-thumb-placeholder" aria-hidden="true">
                 ?
