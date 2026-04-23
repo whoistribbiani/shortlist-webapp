@@ -46,11 +46,11 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
               playerId: "player-1",
               internalId: "internal-1",
               firstName: "Antoine",
-              lastName: "Beydts",
+              lastName: "Savio Camarda Lunghissimo Profilo",
               playerImageUrl: "https://example.test/antoine.png",
               dateOfBirth: "2008-01-01T00:00:00.000Z",
               contractExpires: "2026-06-30T00:00:00.000Z",
-              teams: [{ isMain: true, name: "Genoa CFC", externalId: "team-1" }]
+              teams: [{ isMain: true, name: "VITORIA GUIMARAES SPORTING CLUB MOLTO LUNGO", externalId: "team-1" }]
             }
           ]
         })
@@ -102,8 +102,11 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await page.getByLabel("Squadra").fill("genoa");
   await page.locator("[data-testid='team-suggestions']").getByRole("button", { name: "Genoa CFC" }).click();
 
-  await page.getByLabel("Giocatore").fill("beyd");
-  await page.locator("[data-testid='player-suggestions']").getByRole("button", { name: "Antoine Beydts" }).click();
+  await page.getByLabel("Giocatore").fill("camarda");
+  await page
+    .locator("[data-testid='player-suggestions']")
+    .getByRole("button", { name: "Antoine Savio Camarda Lunghissimo Profilo" })
+    .click();
 
   await page.getByRole("button", { name: "Applica" }).click();
 
@@ -118,8 +121,18 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   );
   expect(hasImageProxyRequest).toBe(true);
 
-  await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abc");
-  await expect(firstCard.getByLabel("Video")).toHaveValue("https://onedrive.live.com/watch?v=abc");
+  await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore");
+  await expect(firstCard.getByLabel("Video")).toHaveValue(
+    "https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore"
+  );
+
+  const noOverflow = await firstCard.locator(".slot-player-link, .autofit-text, .autofit-input").evaluateAll((els) =>
+    els.every((el) => {
+      const fontSize = Number.parseFloat(window.getComputedStyle(el).fontSize || "0");
+      return el.scrollWidth <= el.clientWidth + 1 || fontSize <= 10.1;
+    })
+  );
+  expect(noOverflow).toBe(true);
 
   await firstCard.getByTestId("slot-remove").evaluate((element) => {
     (element as HTMLButtonElement).click();

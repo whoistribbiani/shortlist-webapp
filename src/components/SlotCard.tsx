@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
+import { useAutoFitText } from "../hooks/useAutoFitText";
 import { buildPlayerImageProxyUrl } from "../lib/scoutasticMedia";
 import type { SlotEntry } from "../types";
 
@@ -61,10 +62,26 @@ export function SlotCard({
 
   const canLinkProfile = !!slot.playerInternalId;
   const [imgError, setImgError] = useState(false);
+  const playerNameLinkRef = useRef<HTMLAnchorElement | null>(null);
+  const playerNameLabelRef = useRef<HTMLSpanElement | null>(null);
+  const playerClubRef = useRef<HTMLSpanElement | null>(null);
+  const clubInputRef = useRef<HTMLInputElement | null>(null);
+  const ageInputRef = useRef<HTMLInputElement | null>(null);
+  const expiringInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const proxyImageUrl = useMemo(
     () => buildPlayerImageProxyUrl(apiBaseUrl, slot.playerImageUrl),
     [apiBaseUrl, slot.playerImageUrl]
   );
+  const playerNameText = slot.player || (canLinkProfile ? "Apri profilo" : "Player");
+  const playerClubText = slot.club || "Club";
+  const playerNameLinkFit = useAutoFitText(playerNameLinkRef, playerNameText, { minFontSize: 10, maxFontSize: 21 });
+  const playerNameLabelFit = useAutoFitText(playerNameLabelRef, playerNameText, { minFontSize: 10, maxFontSize: 21 });
+  const playerClubFit = useAutoFitText(playerClubRef, playerClubText, { minFontSize: 10, maxFontSize: 14 });
+  const clubInputFit = useAutoFitText(clubInputRef, slot.club, { minFontSize: 10, maxFontSize: 15 });
+  const ageInputFit = useAutoFitText(ageInputRef, slot.age, { minFontSize: 10, maxFontSize: 15 });
+  const expiringInputFit = useAutoFitText(expiringInputRef, slot.expiring, { minFontSize: 10, maxFontSize: 15 });
+  const videoInputFit = useAutoFitText(videoInputRef, slot.videoUrl, { minFontSize: 10, maxFontSize: 15 });
 
   useEffect(() => {
     setImgError(false);
@@ -152,17 +169,23 @@ export function SlotCard({
             <div className="slot-player-meta">
               {canLinkProfile ? (
                 <a
+                  ref={playerNameLinkRef}
                   className="slot-player-link"
                   href={scoutasticPlayerUrl(slot.playerInternalId)}
                   target="_blank"
                   rel="noreferrer"
+                  style={playerNameLinkFit}
                 >
-                  {slot.player || "Apri profilo"}
+                  {playerNameText}
                 </a>
               ) : (
-                <span className="slot-player-label">{slot.player || "Player"}</span>
+                <span ref={playerNameLabelRef} className="slot-player-label" style={playerNameLabelFit}>
+                  {playerNameText}
+                </span>
               )}
-              <span>{slot.club || "Club"}</span>
+              <span ref={playerClubRef} className="autofit-text" style={playerClubFit}>
+                {playerClubText}
+              </span>
             </div>
           </div>
         )}
@@ -171,41 +194,53 @@ export function SlotCard({
           <label>
             <span>Club</span>
             <input
+              ref={clubInputRef}
+              className="autofit-input"
               aria-label="Club"
               value={slot.club}
               onChange={(event) => onPatch(slotKey, { club: event.target.value })}
               placeholder="Club"
+              style={clubInputFit}
             />
           </label>
 
           <label>
             <span>Age</span>
             <input
+              ref={ageInputRef}
+              className="autofit-input"
               aria-label="Age"
               value={slot.age}
               onChange={(event) => onPatch(slotKey, { age: event.target.value })}
               placeholder="Age"
+              style={ageInputFit}
             />
           </label>
 
           <label>
             <span>Expiring</span>
             <input
+              ref={expiringInputRef}
+              className="autofit-input"
               aria-label="Expiring"
               value={slot.expiring}
               onChange={(event) => onPatch(slotKey, { expiring: event.target.value })}
               placeholder="Expiring"
+              style={expiringInputFit}
             />
           </label>
 
           <label>
             <span>Video</span>
             <input
+              ref={videoInputRef}
+              className="autofit-input"
               aria-label="Video"
               type="url"
               value={slot.videoUrl}
               onChange={(event) => onPatch(slotKey, { videoUrl: event.target.value })}
               placeholder="https://..."
+              style={videoInputFit}
             />
           </label>
         </div>
