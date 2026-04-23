@@ -7,6 +7,7 @@ import { PlayerPicker } from "./components/PlayerPicker";
 import { PositionTabs } from "./components/PositionTabs";
 import { RecapView } from "./components/RecapView";
 import { ScenarioGrid } from "./components/ScenarioGrid";
+import { ShareLinkBar } from "./components/ShareLinkBar";
 import { POSITIONS } from "./constants/layout";
 import { useDebouncedEffect } from "./hooks/useDebouncedEffect";
 import { createApiClient } from "./lib/apiClient";
@@ -83,6 +84,20 @@ function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+function formatSaveTime(value: string): string {
+  if (!value) {
+    return "--:--";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "--:--";
+  }
+  return new Intl.DateTimeFormat("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
 export default function App({ apiBaseUrl }: AppProps): JSX.Element {
   const api = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl]);
   const [shareToken] = useState(() => ensureShareTokenInUrl());
@@ -94,6 +109,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
   const [hydrated, setHydrated] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [bannerMessage, setBannerMessage] = useState("");
+  const [lastSavedAt, setLastSavedAt] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -110,6 +126,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
           ...board.meta,
           shareToken
         }));
+        setLastSavedAt(board.meta.updatedAt || "");
         setState(arrayToBoardState(board.slots));
         setLoadError("");
       })
@@ -137,7 +154,13 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
       void api
         .putBoard(shareToken, payloadForSave(meta, state))
         .then(() => {
+          const now = new Date().toISOString();
+          setLastSavedAt(now);
           setSaveState("saved");
+          setMeta((prev) => ({
+            ...prev,
+            updatedAt: now
+          }));
         })
         .catch(() => {
           setSaveState("error");
@@ -208,6 +231,8 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
     return url.toString();
   }, [shareToken]);
 
+  const saveDisplayTime = useMemo(() => formatSaveTime(lastSavedAt || meta.updatedAt), [lastSavedAt, meta.updatedAt]);
+
   return (
     <BoardShell
       meta={meta}
@@ -221,10 +246,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
         <ExportButton onExport={onExport} />
       </div>
 
-      <div className="share-strip">
-        <span>Link privato:</span>
-        <input value={shareLink} readOnly />
-      </div>
+      <ShareLinkBar shareLink={shareLink} />
 
       {loadError && <p className="error-banner">{loadError}</p>}
       {bannerMessage && <p className="warning-banner">{bannerMessage}</p>}
@@ -250,6 +272,25 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
               }}
             />
           </DndContext>
+
+          <div className="board-legend-row">
+            <div className="board-legend-items">
+              <span className="legend-item">
+                <span className="legend-dot legend-dot-green" />
+                Budget disponibile
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot legend-dot-orange" />
+                Attenzione budget
+              </span>
+              <span className="legend-item">
+                <span className="legend-dot legend-dot-red" />
+                Budget superato
+              </span>
+              <span className="legend-item legend-drag-hint">Trascina per riordinare</span>
+            </div>
+            <div className="legend-save-time">Ultimo salvataggio: oggi alle {saveDisplayTime}</div>
+          </div>
         </>
       )}
 

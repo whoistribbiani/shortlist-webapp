@@ -14,6 +14,14 @@ const emptyBoardResponse = {
 test("selects a player with autocomplete flow and enriches the slot", async ({ page }) => {
   let hasImageProxyRequest = false;
   page.on("dialog", (dialog) => dialog.accept());
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: () => Promise.resolve()
+      },
+      configurable: true
+    });
+  });
 
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
@@ -94,6 +102,9 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   });
 
   await page.goto("/?token=token-e2e");
+  await page.getByTestId("copy-link-btn").click();
+  await expect(page.getByTestId("copy-link-btn")).toHaveText("Copiato");
+
   await page.getByTestId("slot-select").first().click();
 
   await page.getByLabel("Competizione").fill("serie");
