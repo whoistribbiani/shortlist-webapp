@@ -370,33 +370,13 @@ main {
   border: 1px solid var(--line);
   background: #fff;
   border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 5px 7px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #5b6d8d;
-  transition: background-color 100ms ease, border-color 100ms ease;
-  width: 26px;
-  height: 26px;
-  padding: 0;
 }
 
-.pick-btn:hover {
-  background: #eef2fc;
-  border-color: #9ab0d8;
-  color: #12396f;
-}
-
-.drag-handle:hover {
-  background: #f0f2f7;
-}
-
-[data-state="filled"] .drag-handle {
-  cursor: grab;
-}
-
-[data-state="filled"] .drag-handle:active {
-  cursor: grabbing;
+.drag-handle {
+  width: 38px;
 }
 
 .slot-player-head {
