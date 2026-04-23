@@ -121,10 +121,26 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   );
   expect(hasImageProxyRequest).toBe(true);
 
-  await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore");
-  await expect(firstCard.getByLabel("Video")).toHaveValue(
+  await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
+  await firstCard.getByTestId("video-edit").click();
+  await firstCard
+    .getByTestId("video-popover-input")
+    .fill("https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore");
+  await firstCard.getByTestId("video-popover-save").evaluate((element) => {
+    (element as HTMLButtonElement).click();
+  });
+  await expect(firstCard.getByTestId("video-open")).toHaveAttribute(
+    "href",
     "https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore"
   );
+  await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "false");
+
+  await firstCard.getByTestId("video-edit").click();
+  await firstCard.getByTestId("video-popover-remove").evaluate((element) => {
+    (element as HTMLButtonElement).click();
+  });
+  await expect(firstCard.getByTestId("video-open")).not.toHaveAttribute("href", /https?:\/\//);
+  await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
 
   const noOverflow = await firstCard.locator(".slot-player-link, .autofit-text, .autofit-input").evaluateAll((els) =>
     els.every((el) => {

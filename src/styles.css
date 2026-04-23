@@ -335,7 +335,7 @@ main {
   padding: 8px;
   border: 2px solid transparent;
   transition: border-color 130ms ease, background-color 130ms ease;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .slot-empty {
@@ -481,11 +481,16 @@ main {
 .slot-fields {
   display: grid;
   gap: 4px;
+  margin-bottom: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
 .slot-fields label {
   display: grid;
   gap: 2px;
+  min-width: 0;
+  width: 100%;
 }
 
 .slot-fields span {
@@ -495,6 +500,10 @@ main {
 }
 
 .slot-fields input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 4px 6px;
@@ -502,16 +511,115 @@ main {
   background: #fff;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .autofit-text {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .autofit-input {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-actions {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: end;
+  justify-items: end;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.video-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: #355587;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.video-icon-btn:hover {
+  border-color: #9bb1d8;
+  background: #edf2fd;
+}
+
+.video-icon-btn svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.video-icon-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.video-popover {
+  grid-column: 1 / -1;
+  width: min(260px, calc(100vw - 40px));
+  border: 1px solid #b7c6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(17, 35, 70, 0.18);
+  padding: 8px;
+}
+
+.video-popover input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+}
+
+.video-popover-error {
+  margin: 6px 0 0;
+  color: #8f231f;
+  font-size: 0.73rem;
+}
+
+.video-popover-actions {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.video-popover-actions button {
+  border: 1px solid #c3cddd;
+  border-radius: 6px;
+  background: #f7f9fd;
+  color: #24385b;
+  cursor: pointer;
+  font-size: 0.73rem;
+  padding: 6px 4px;
+}
+
+.video-save-btn {
+  border-color: #96adcf;
+  background: #e8f0ff;
+}
+
+.video-cancel-btn {
+  background: #f4f5f8;
+}
+
+.video-remove-btn {
+  border-color: #deb5b5;
+  background: #fff1f1;
+  color: #7f1e1e;
 }
 
 .recap-view {

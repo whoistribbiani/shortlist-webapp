@@ -4,6 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { useAutoFitText } from "../hooks/useAutoFitText";
 import { buildPlayerImageProxyUrl } from "../lib/scoutasticMedia";
+import { isValidVideoUrl } from "../lib/videoUrl";
 import type { SlotEntry } from "../types";
 
 interface SlotCardProps {
@@ -68,11 +69,14 @@ export function SlotCard({
   const clubInputRef = useRef<HTMLInputElement | null>(null);
   const ageInputRef = useRef<HTMLInputElement | null>(null);
   const expiringInputRef = useRef<HTMLInputElement | null>(null);
-  const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const [isVideoPopoverOpen, setIsVideoPopoverOpen] = useState(false);
+  const [videoDraft, setVideoDraft] = useState(slot.videoUrl);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const proxyImageUrl = useMemo(
     () => buildPlayerImageProxyUrl(apiBaseUrl, slot.playerImageUrl),
     [apiBaseUrl, slot.playerImageUrl]
   );
+  const hasValidVideoUrl = isValidVideoUrl(slot.videoUrl);
   const playerNameText = slot.player || (canLinkProfile ? "Apri profilo" : "Player");
   const playerClubText = slot.club || "Club";
   const playerNameLinkFit = useAutoFitText(playerNameLinkRef, playerNameText, { minFontSize: 10, maxFontSize: 21 });
@@ -81,11 +85,21 @@ export function SlotCard({
   const clubInputFit = useAutoFitText(clubInputRef, slot.club, { minFontSize: 10, maxFontSize: 15 });
   const ageInputFit = useAutoFitText(ageInputRef, slot.age, { minFontSize: 10, maxFontSize: 15 });
   const expiringInputFit = useAutoFitText(expiringInputRef, slot.expiring, { minFontSize: 10, maxFontSize: 15 });
-  const videoInputFit = useAutoFitText(videoInputRef, slot.videoUrl, { minFontSize: 10, maxFontSize: 15 });
 
   useEffect(() => {
     setImgError(false);
   }, [slot.playerImageUrl]);
+
+  useEffect(() => {
+    setVideoDraft(slot.videoUrl);
+  }, [slot.videoUrl]);
+
+  useEffect(() => {
+    if (!filled) {
+      setIsVideoPopoverOpen(false);
+      setVideoError(null);
+    }
+  }, [filled]);
 
   return (
     <div ref={setDropRef} className="slot-drop-zone">
@@ -229,21 +243,118 @@ export function SlotCard({
               style={expiringInputFit}
             />
           </label>
-
-          <label>
-            <span>Video</span>
-            <input
-              ref={videoInputRef}
-              className="autofit-input"
-              aria-label="Video"
-              type="url"
-              value={slot.videoUrl}
-              onChange={(event) => onPatch(slotKey, { videoUrl: event.target.value })}
-              placeholder="https://..."
-              style={videoInputFit}
-            />
-          </label>
         </div>
+
+        {filled && (
+          <div className="video-actions">
+            <a
+              className={`video-icon-btn ${hasValidVideoUrl ? "" : "video-icon-disabled"}`.trim()}
+              data-testid="video-open"
+              href={hasValidVideoUrl ? slot.videoUrl : undefined}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Apri video"
+              title="Apri video"
+              aria-disabled={!hasValidVideoUrl}
+              onClick={(event) => {
+                if (!hasValidVideoUrl) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d="M6 10.7 11.2 5.5M9.5 4h3v3M7.7 4H4.6A1.6 1.6 0 0 0 3 5.6v5.8A1.6 1.6 0 0 0 4.6 13h5.8a1.6 1.6 0 0 0 1.6-1.6V8.3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </a>
+            <button
+              type="button"
+              className="video-icon-btn"
+              data-testid="video-edit"
+              aria-label="Incolla o modifica video"
+              title="Incolla o modifica video"
+              onClick={() => {
+                setVideoDraft(slot.videoUrl);
+                setVideoError(null);
+                setIsVideoPopoverOpen((current) => !current);
+              }}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d="M3 11.7V13h1.3l7-7-1.3-1.3-7 7ZM12.3 5l.7-.7a.9.9 0 0 0 0-1.3l-.9-.9a.9.9 0 0 0-1.3 0l-.7.7L12.3 5Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+            {isVideoPopoverOpen && (
+              <div className="video-popover" role="dialog" aria-label="Modifica URL video">
+                <input
+                  data-testid="video-popover-input"
+                  type="url"
+                  value={videoDraft}
+                  onChange={(event) => {
+                    setVideoDraft(event.target.value);
+                    if (videoError) {
+                      setVideoError(null);
+                    }
+                  }}
+                  placeholder="https://..."
+                />
+                {videoError && <p className="video-popover-error">{videoError}</p>}
+                <div className="video-popover-actions">
+                  <button
+                    type="button"
+                    data-testid="video-popover-save"
+                    className="video-save-btn"
+                    onClick={() => {
+                      const candidate = videoDraft.trim();
+                      if (candidate && !isValidVideoUrl(candidate)) {
+                        setVideoError("Inserisci un URL valido (http/https).");
+                        return;
+                      }
+                      onPatch(slotKey, { videoUrl: candidate });
+                      setIsVideoPopoverOpen(false);
+                      setVideoError(null);
+                    }}
+                  >
+                    Salva
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="video-popover-cancel"
+                    className="video-cancel-btn"
+                    onClick={() => {
+                      setVideoDraft(slot.videoUrl);
+                      setVideoError(null);
+                      setIsVideoPopoverOpen(false);
+                    }}
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="video-popover-remove"
+                    className="video-remove-btn"
+                    onClick={() => {
+                      setVideoDraft("");
+                      setVideoError(null);
+                      onPatch(slotKey, { videoUrl: "" });
+                      setIsVideoPopoverOpen(false);
+                    }}
+                  >
+                    Rimuovi URL
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </article>
     </div>
   );
