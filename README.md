@@ -35,12 +35,12 @@ npm run dev
 ## Backend Supabase
 ### Migrazioni
 ```bash
-supabase db push
+npx supabase db push
 ```
 
 ### Deploy function
 ```bash
-supabase functions deploy api --no-verify-jwt
+npx supabase functions deploy api --no-verify-jwt
 ```
 
 ### Secrets richiesti (Supabase)
