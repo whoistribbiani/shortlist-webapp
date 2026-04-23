@@ -1,0 +1,80 @@
+﻿# Shortlist Webapp v1
+
+Webapp React + TypeScript per costruire shortlist scouting per posizione, con:
+- 12 board posizione + tab `Recap` read-only
+- inserimento player con flusso `Competizione -> Squadra -> Giocatore`
+- drag&drop slot-to-slot (move)
+- blocco duplicati nella stessa posizione
+- autosave cloud tramite link privato (`share token`)
+- export `.xlsx` compatibile (Overview + Recap + 12 sheet posizione)
+
+## Stack
+- Frontend: React, Vite, TypeScript, dnd-kit
+- Backend: Supabase Edge Function (`functions/api`)
+- DB: Supabase Postgres (`boards`, `board_meta`, `board_slots`)
+
+## Avvio locale frontend
+```bash
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+PowerShell (alternativa):
+```powershell
+Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+## Variabili frontend (`.env.local`)
+- `VITE_API_BASE_URL` URL base API (`http://127.0.0.1:54321/functions/v1/api` in locale)
+- `VITE_DEFAULT_SEASON_ID` default season
+- `VITE_DEFAULT_GENDER` default gender
+
+## Backend Supabase
+### Migrazioni
+```bash
+supabase db push
+```
+
+### Deploy function
+```bash
+supabase functions deploy api --no-verify-jwt
+```
+
+### Secrets richiesti (Supabase)
+- `SCOUTASTIC_BASE_URL`
+- `SCOUTASTIC_ACCESS_KEY` oppure host-specific:
+  - `SCOUTASTIC_ACCESS_KEY_SCOUTINGDEPARTMENT`
+  - `SCOUTASTIC_ACCESS_KEY_GENOACFC`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+## API implementate
+- `GET /api/catalog/competitions?seasonId=&gender=male`
+- `GET /api/catalog/teams?competitionId=&seasonId=`
+- `GET /api/catalog/players?teamId=&seasonId=`
+- `GET /api/board/{shareToken}`
+- `PUT /api/board/{shareToken}`
+- `POST /api/board/{shareToken}/export-xlsx`
+
+## GitHub Pages (Project Pages)
+Il `base` Vite viene impostato automaticamente in CI usando `GITHUB_REPOSITORY`, quindi in produzione usa `/<nome-repo>/` e in locale resta `/`.
+
+Workflow: `.github/workflows/shortlist-webapp-pages.yml`
+
+Secret richiesto su GitHub:
+- `SHORTLIST_API_BASE_URL` -> URL pubblico della function Supabase (`.../functions/v1/api`)
+
+## Test
+```bash
+npm run test
+npm run build
+```
+
+E2E (dopo install browser Playwright):
+```bash
+npx playwright install
+npm run e2e
+```
