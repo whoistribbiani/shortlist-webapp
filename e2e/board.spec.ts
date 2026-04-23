@@ -94,7 +94,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   });
 
   await page.goto("/?token=token-e2e");
-  await page.getByRole("button", { name: "Seleziona player" }).first().click();
+  await page.getByTestId("slot-select").first().click();
 
   await page.getByLabel("Competizione").fill("serie");
   await page.locator("[data-testid='competition-suggestions']").getByRole("button", { name: /Serie A/ }).click();
@@ -109,8 +109,8 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
 
   const firstCard = page.locator(".slot-card").first();
   await expect(firstCard).toHaveAttribute("data-state", "filled");
-  await expect(firstCard.getByLabel("Player")).toHaveValue("Beydts");
-  await expect(firstCard.getByLabel("Name")).toHaveValue("Antoine");
+  await expect(firstCard.locator('input[aria-label="Player"]')).toHaveCount(0);
+  await expect(firstCard.locator('input[aria-label="Name"]')).toHaveCount(0);
   await expect(firstCard.locator(".slot-thumb")).toHaveAttribute("src", /\/api\/catalog\/player-image\?src=/);
   await expect(firstCard.locator(".slot-player-link")).toHaveAttribute(
     "href",
@@ -121,10 +121,10 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abc");
   await expect(firstCard.getByLabel("Video")).toHaveValue("https://onedrive.live.com/watch?v=abc");
 
-  await firstCard.locator(".clear-btn").evaluate((element) => {
+  await firstCard.getByTestId("slot-remove").evaluate((element) => {
     (element as HTMLButtonElement).click();
   });
   await expect(firstCard).toHaveAttribute("data-state", "empty");
-  await expect(firstCard.getByLabel("Player")).toHaveValue("");
-  await expect(firstCard.getByLabel("Name")).toHaveValue("");
+  await expect(firstCard.locator('input[aria-label="Player"]')).toHaveCount(0);
+  await expect(firstCard.locator('input[aria-label="Name"]')).toHaveCount(0);
 });

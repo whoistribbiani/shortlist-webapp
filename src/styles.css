@@ -249,11 +249,13 @@ main {
 .scenario-grid-wrapper {
   border: 1px solid var(--line-strong);
   background: #fff;
+  overflow-x: auto;
 }
 
 .scenario-grid-header {
   display: grid;
-  grid-template-columns: 52px repeat(4, minmax(280px, 1fr));
+  grid-template-columns: 52px repeat(4, minmax(420px, 1fr));
+  min-width: 1732px;
 }
 
 .rank-head {
@@ -299,7 +301,8 @@ main {
 
 .rank-row {
   display: grid;
-  grid-template-columns: 52px repeat(4, minmax(280px, 1fr));
+  grid-template-columns: 52px repeat(4, minmax(420px, 1fr));
+  min-width: 1732px;
   border-top: 2px solid #101727;
 }
 
@@ -332,6 +335,7 @@ main {
   padding: 8px;
   border: 2px solid transparent;
   transition: border-color 130ms ease, background-color 130ms ease;
+  overflow: hidden;
 }
 
 .slot-empty {
@@ -359,41 +363,64 @@ main {
 }
 
 .slot-actions {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 32px 32px 32px;
+  justify-content: end;
+  justify-items: center;
+  align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  min-height: 32px;
 }
 
 .pick-btn,
 .clear-btn,
 .drag-handle {
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--line);
   background: #fff;
   border-radius: 6px;
-  font-size: 0.75rem;
-  padding: 5px 7px;
+  padding: 0;
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #355587;
 }
 
-.slot-actions .pick-btn {
-  flex: 1 1 auto;
+.pick-btn svg,
+.clear-btn svg,
+.drag-handle svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: currentColor;
 }
 
 .clear-btn {
-  border-color: #d9b5b5;
+  border-color: #e4bcbc;
   background: #fff5f5;
   color: #8f231f;
-  white-space: nowrap;
 }
 
-.clear-btn:hover {
+.pick-btn:hover {
+  border-color: #9bb1d8;
+  background: #edf2fd;
+}
+
+.clear-btn:hover:enabled {
   background: #ffeaea;
   border-color: #cc8686;
 }
 
-.drag-handle {
-  width: 38px;
+.drag-handle:hover:enabled {
+  background: #eef2fa;
+  border-color: #9cb2d8;
+}
+
+.drag-handle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .slot-player-head {
@@ -642,11 +669,7 @@ main {
 
   .scenario-grid-header,
   .rank-row {
-    grid-template-columns: 52px repeat(4, minmax(240px, 1fr));
-    min-width: 1120px;
-  }
-
-  .scenario-grid-wrapper {
-    overflow-x: auto;
+    grid-template-columns: 52px repeat(4, minmax(360px, 1fr));
+    min-width: 1492px;
   }
 }
