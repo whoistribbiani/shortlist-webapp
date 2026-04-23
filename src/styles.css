@@ -1,6 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap");
+@font-face {
+  font-family: "Lato";
+  src: url("./assets/fonts/Lato-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lato";
+  src: url("./assets/fonts/Lato-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lato";
+  src: url("./assets/fonts/Lato-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lato";
+  src: url("./assets/fonts/Lato-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
+  --font-primary: "Lato", "Segoe UI", sans-serif;
   --bg: #f0f1ef;
   --surface: #fcfcfb;
   --ink: #101625;
@@ -26,7 +57,14 @@ body {
     radial-gradient(1200px 400px at -10% 5%, #ecd6bf 0%, transparent 55%),
     var(--bg);
   color: var(--ink);
-  font-family: "Lato", "Segoe UI", sans-serif;
+  font-family: var(--font-primary);
+}
+
+input,
+button,
+select,
+textarea {
+  font-family: var(--font-primary);
 }
 
 #root {
