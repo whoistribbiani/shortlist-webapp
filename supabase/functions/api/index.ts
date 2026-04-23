@@ -14,7 +14,10 @@ interface SlotEntry {
   club: string;
   age: string;
   expiring: string;
+  videoUrl: string;
   playerId: string;
+  playerInternalId: string;
+  playerImageUrl: string;
   teamId: string;
   competitionId: string;
 }
@@ -59,14 +62,6 @@ const LANE_INDEX: Record<LaneId, 0 | 1 | 2> = {
   A2: 1,
   B1: 2
 };
-
-const SLOT_FIELDS: Array<keyof Pick<SlotEntry, "name" | "player" | "club" | "age" | "expiring">> = [
-  "name",
-  "player",
-  "club",
-  "age",
-  "expiring"
-];
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -133,7 +128,10 @@ function normalizeSlot(input: unknown): SlotEntry | null {
     club: clean(raw.club),
     age: clean(raw.age),
     expiring: clean(raw.expiring),
+    videoUrl: clean(raw.videoUrl),
     playerId: clean(raw.playerId),
+    playerInternalId: clean(raw.playerInternalId),
+    playerImageUrl: clean(raw.playerImageUrl),
     teamId: clean(raw.teamId),
     competitionId: clean(raw.competitionId)
   };
@@ -169,6 +167,9 @@ function getSupabaseAdmin() {
 
 function scoutasticConfig() {
   const baseUrl = clean(Deno.env.get("SCOUTASTIC_BASE_URL") ?? "");
+  if (!baseUrl) {
+    throw new Error("Missing SCOUTASTIC_BASE_URL or Scoutastic access key");
+  }
   const host = new URL(baseUrl).hostname.toLowerCase();
   const fallbackKey = clean(Deno.env.get("SCOUTASTIC_ACCESS_KEY") ?? "");
   const hostSpecific =
@@ -178,10 +179,26 @@ function scoutasticConfig() {
         ? clean(Deno.env.get("SCOUTASTIC_ACCESS_KEY_GENOACFC") ?? "")
         : "";
   const accessKey = hostSpecific || fallbackKey;
-  if (!baseUrl || !accessKey) {
+  if (!accessKey) {
     throw new Error("Missing SCOUTASTIC_BASE_URL or Scoutastic access key");
   }
   return { baseUrl, accessKey };
+}
+
+function resolveScoutasticMediaUrl(raw: string, baseUrl: string): string {
+  const value = clean(raw);
+  if (!value) {
+    return "";
+  }
+  try {
+    return new URL(value).toString();
+  } catch {
+    try {
+      return new URL(value, `${new URL(baseUrl).origin}/`).toString();
+    } catch {
+      return "";
+    }
+  }
 }
 
 async function scoutasticGet(
@@ -297,6 +314,7 @@ async function fetchTeamsByCompetition(competitionId: string, seasonId: string) 
 }
 
 async function fetchPlayersByTeam(teamId: string, seasonId: string) {
+  const { baseUrl } = scoutasticConfig();
   const payload = (await scoutasticGet(`/teams/${teamId}/players/${seasonId}`, {
     marketValues: "false",
     performanceData: "false",
@@ -313,6 +331,7 @@ async function fetchPlayersByTeam(teamId: string, seasonId: string) {
     name: clean(player.name),
     dateOfBirth: clean(player.dateOfBirth),
     contractExpires: clean(player.contractExpires),
+    playerImageUrl: resolveScoutasticMediaUrl(clean(player.imageUrlV2) || clean(player.imageUrl), baseUrl),
     teams: Array.isArray(player.teams) ? player.teams : []
   }));
 }
@@ -351,7 +370,7 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
   const slotsResponse = await supabase
     .from("board_slots")
     .select(
-      "position_id, rank, scenario, lane, name, player, club, age, expiring, player_id, team_id, competition_id"
+      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, player_id, player_internal_id, player_image_url, team_id, competition_id"
     )
     .eq("board_id", board.id);
 
@@ -369,7 +388,10 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
     club: clean(row.club),
     age: clean(row.age),
     expiring: clean(row.expiring),
+    videoUrl: clean(row.video_url),
     playerId: clean(row.player_id),
+    playerInternalId: clean(row.player_internal_id),
+    playerImageUrl: clean(row.player_image_url),
     teamId: clean(row.team_id),
     competitionId: clean(row.competition_id)
   }));
@@ -410,12 +432,10 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
     throw boardUpdate.error;
   }
 
-  const metaUpsert = await supabase
-    .from("board_meta")
-    .upsert({
-      board_id: board.id,
-      payload: payload.meta ?? {}
-    });
+  const metaUpsert = await supabase.from("board_meta").upsert({
+    board_id: board.id,
+    payload: payload.meta ?? {}
+  });
   if (metaUpsert.error) {
     throw metaUpsert.error;
   }
@@ -441,7 +461,10 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
       club: slot.club,
       age: slot.age,
       expiring: slot.expiring,
+      video_url: slot.videoUrl,
       player_id: slot.playerId,
+      player_internal_id: slot.playerInternalId,
+      player_image_url: slot.playerImageUrl,
       team_id: slot.teamId,
       competition_id: slot.competitionId
     }));
@@ -455,7 +478,7 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
 }
 
 function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number], slotIndex: Map<string, SlotEntry>) {
-  const rows = Array.from({ length: 41 }, () => Array(17).fill(""));
+  const rows = Array.from({ length: 48 }, () => Array(17).fill(""));
 
   rows[0][0] = "Shortlist";
   rows[4][5] = meta.title || "Scouting ShortList";
@@ -463,12 +486,12 @@ function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number
   rows[4][8] = position.title;
   rows[4][13] = new Date().toISOString().slice(0, 10);
 
-  rows[6][1] = "n°";
+  rows[6][1] = "n";
   rows[6][2] = "Info";
-  rows[6][3] = "Scenario: 0 - 2 m/€";
-  rows[6][6] = "Scenario: 2 - 5 m/€";
-  rows[6][9] = "Scenario: 5 - 10 m/€";
-  rows[6][12] = "Scenario: 10 - 20 m/€";
+  rows[6][3] = "Scenario: 0 - 2 m/EUR";
+  rows[6][6] = "Scenario: 2 - 5 m/EUR";
+  rows[6][9] = "Scenario: 5 - 10 m/EUR";
+  rows[6][12] = "Scenario: 10 - 20 m/EUR";
 
   rows[7][3] = "A1 / B1";
   rows[7][4] = "A2";
@@ -484,13 +507,14 @@ function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number
   rows[7][14] = "B1";
 
   for (let rank = 1; rank <= 6; rank += 1) {
-    const rowBase = 8 + (rank - 1) * 5;
+    const rowBase = 8 + (rank - 1) * 6;
     rows[rowBase][1] = rank;
     rows[rowBase][2] = "Name";
     rows[rowBase + 1][2] = "Player";
     rows[rowBase + 2][2] = "Club";
     rows[rowBase + 3][2] = "Age";
     rows[rowBase + 4][2] = "Expiring";
+    rows[rowBase + 5][2] = "Video";
 
     for (const scenario of SCENARIOS) {
       for (const lane of (["A1B1", "A2", "B1"] as const)) {
@@ -511,6 +535,7 @@ function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number
         rows[rowBase + 2][col] = slot.club;
         rows[rowBase + 3][col] = slot.age;
         rows[rowBase + 4][col] = slot.expiring;
+        rows[rowBase + 5][col] = slot.videoUrl;
       }
     }
   }
@@ -518,17 +543,17 @@ function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number
 }
 
 function buildRecapSheet(slotIndex: Map<string, SlotEntry>) {
-  const rows = Array.from({ length: 68 }, () => Array(17).fill(""));
+  const rows = Array.from({ length: 86 }, () => Array(17).fill(""));
 
   rows[0][0] = "Shortlist";
   rows[4][5] = "Scouting ShortList";
   rows[4][13] = new Date().toISOString().slice(0, 10);
-  rows[6][1] = "n°";
+  rows[6][1] = "n";
   rows[6][2] = "Info";
-  rows[6][3] = "Scenario: 0 - 2 m/€";
-  rows[6][6] = "Scenario: 2 - 5 m/€";
-  rows[6][9] = "Scenario: 5 - 10 m/€";
-  rows[6][12] = "Scenario: 10 - 20 m/€";
+  rows[6][3] = "Scenario: 0 - 2 m/EUR";
+  rows[6][6] = "Scenario: 2 - 5 m/EUR";
+  rows[6][9] = "Scenario: 5 - 10 m/EUR";
+  rows[6][12] = "Scenario: 10 - 20 m/EUR";
   rows[7][3] = "A1 / B1";
   rows[7][4] = "A2";
   rows[7][5] = "B1";
@@ -543,13 +568,14 @@ function buildRecapSheet(slotIndex: Map<string, SlotEntry>) {
   rows[7][14] = "B1";
 
   POSITIONS.forEach((position, index) => {
-    const rowBase = 8 + index * 5;
+    const rowBase = 8 + index * 6;
     rows[rowBase][1] = position.id;
     rows[rowBase][2] = "Name";
     rows[rowBase + 1][2] = "Player";
     rows[rowBase + 2][2] = "Club";
     rows[rowBase + 3][2] = "Age";
     rows[rowBase + 4][2] = "Expiring";
+    rows[rowBase + 5][2] = "Video";
 
     for (const scenario of SCENARIOS) {
       for (const lane of (["A1B1", "A2", "B1"] as const)) {
@@ -570,6 +596,7 @@ function buildRecapSheet(slotIndex: Map<string, SlotEntry>) {
         rows[rowBase + 2][col] = slot.club;
         rows[rowBase + 3][col] = slot.age;
         rows[rowBase + 4][col] = slot.expiring;
+        rows[rowBase + 5][col] = slot.videoUrl;
       }
     }
   });

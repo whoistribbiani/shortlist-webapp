@@ -7,8 +7,10 @@ describe("playerTransform", () => {
     const slot = toAutofillFromApiPlayer(
       {
         playerId: "123",
+        internalId: "internal-123",
         firstName: "Antoine",
         lastName: "Beydts",
+        imageUrlV2: "/images/player.png",
         dateOfBirth: "2008-03-11T00:00:00.000Z",
         contractExpires: "2026-06-30T00:00:00.000Z",
         teams: [
@@ -24,6 +26,8 @@ describe("playerTransform", () => {
 
     expect(slot).toMatchObject({
       playerId: "123",
+      playerInternalId: "internal-123",
+      playerImageUrl: "https://genoacfc.scoutastic.com/images/player.png",
       competitionId: "comp-77",
       name: "Antoine",
       player: "Beydts",
@@ -45,6 +49,8 @@ describe("playerTransform", () => {
 
     expect(slot.playerId).toBe("legacy-id");
     expect(slot.player).toBe("Single Name");
+    expect(slot.playerInternalId).toBe("");
+    expect(slot.playerImageUrl).toBe("");
     expect(slot.name).toBe("");
     expect(slot.club).toBe("");
     expect(slot.age).toBe("");

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import genoaLogo from "../assets/genoa-logo.png";
 import type { BoardMeta } from "../types";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -29,9 +30,7 @@ export function BoardShell({ meta, saveState, onMetaChange, children }: BoardShe
     <div className="board-shell">
       <header className="board-header">
         <div className="brand-block">
-          <div className="brand-mark" aria-hidden="true">
-            G
-          </div>
+          <img className="brand-logo" src={genoaLogo} alt="Genoa CFC" />
           <div>
             <h1>Scouting ShortList</h1>
             <p className="subtitle">Board condivisa via link privato</p>

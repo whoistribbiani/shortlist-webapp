@@ -20,13 +20,29 @@ interface PlayerPickerProps {
 }
 
 function optionLabel(name: string, area: string, season: string): string {
-  const areaPart = area ? ` · ${area}` : "";
-  const seasonPart = season ? ` · S${season}` : "";
+  const areaPart = area ? ` - ${area}` : "";
+  const seasonPart = season ? ` - S${season}` : "";
   return `${name}${areaPart}${seasonPart}`;
 }
 
 function playerKey(player: PlayerOption): string {
   return (player.playerId ?? player.id ?? player.internalId ?? "").trim();
+}
+
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function includesQuery(haystack: string, query: string): boolean {
+  const q = normalize(query);
+  if (!q) {
+    return true;
+  }
+  return normalize(haystack).includes(q);
 }
 
 export function PlayerPicker({
@@ -43,9 +59,14 @@ export function PlayerPicker({
   const [competitions, setCompetitions] = useState<Array<{ id: string; name: string; area: string; season: string }>>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [players, setPlayers] = useState<PlayerOption[]>([]);
+
   const [competitionId, setCompetitionId] = useState("");
   const [teamId, setTeamId] = useState("");
   const [playerId, setPlayerId] = useState("");
+
+  const [competitionQuery, setCompetitionQuery] = useState("");
+  const [teamQuery, setTeamQuery] = useState("");
+  const [playerQuery, setPlayerQuery] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -54,6 +75,9 @@ export function PlayerPicker({
     setCompetitionId("");
     setTeamId("");
     setPlayerId("");
+    setCompetitionQuery("");
+    setTeamQuery("");
+    setPlayerQuery("");
     setTeams([]);
     setPlayers([]);
     setError("");
@@ -92,6 +116,9 @@ export function PlayerPicker({
     if (!competitionId) {
       setTeams([]);
       setTeamId("");
+      setPlayerId("");
+      setTeamQuery("");
+      setPlayerQuery("");
       return;
     }
     let cancelled = false;
@@ -100,6 +127,8 @@ export function PlayerPicker({
     setTeamId("");
     setPlayers([]);
     setPlayerId("");
+    setTeamQuery("");
+    setPlayerQuery("");
     api
       .fetchTeams({ competitionId, seasonId })
       .then((data) => {
@@ -126,12 +155,14 @@ export function PlayerPicker({
     if (!teamId) {
       setPlayers([]);
       setPlayerId("");
+      setPlayerQuery("");
       return;
     }
     let cancelled = false;
     setLoading(true);
     setError("");
     setPlayerId("");
+    setPlayerQuery("");
     api
       .fetchPlayers({ teamId, seasonId })
       .then((data) => {
@@ -152,7 +183,27 @@ export function PlayerPicker({
     return () => {
       cancelled = true;
     };
-  }, [api, teamId, seasonId]);
+  }, [api, seasonId, teamId]);
+
+  const competitionSuggestions = useMemo(
+    () =>
+      competitions
+        .filter((competition) =>
+          includesQuery(`${competition.name} ${competition.area} ${competition.season}`, competitionQuery)
+        )
+        .slice(0, 8),
+    [competitionQuery, competitions]
+  );
+
+  const teamSuggestions = useMemo(
+    () => teams.filter((team) => includesQuery(team.teamName, teamQuery)).slice(0, 8),
+    [teamQuery, teams]
+  );
+
+  const playerSuggestions = useMemo(
+    () => players.filter((player) => includesQuery(player.label, playerQuery)).slice(0, 8),
+    [playerQuery, players]
+  );
 
   const selectedPlayer = useMemo(() => players.find((item) => playerKey(item) === playerId), [players, playerId]);
 
@@ -166,54 +217,102 @@ export function PlayerPicker({
         <div className="picker-head">
           <h2>Selezione Player</h2>
           <button type="button" onClick={onClose} aria-label="Close picker">
-            ✕
+            x
           </button>
         </div>
 
         <div className="picker-body">
           <label>
             Competizione
-            <select value={competitionId} onChange={(event) => setCompetitionId(event.target.value)}>
-              <option value="">Seleziona competizione</option>
-              {competitions.map((competition) => (
-                <option key={competition.id} value={competition.id}>
-                  {optionLabel(competition.name, competition.area, competition.season)}
-                </option>
-              ))}
-            </select>
+            <input
+              aria-label="Competizione"
+              value={competitionQuery}
+              onChange={(event) => {
+                setCompetitionQuery(event.target.value);
+                setCompetitionId("");
+                setTeamId("");
+                setPlayerId("");
+              }}
+              placeholder="Digita competizione"
+              autoComplete="off"
+            />
           </label>
+          <div className="picker-suggest-list" data-testid="competition-suggestions">
+            {competitionSuggestions.map((competition) => (
+              <button
+                key={competition.id}
+                type="button"
+                className="picker-suggest-item"
+                onClick={() => {
+                  setCompetitionId(competition.id);
+                  setCompetitionQuery(optionLabel(competition.name, competition.area, competition.season));
+                }}
+              >
+                {optionLabel(competition.name, competition.area, competition.season)}
+              </button>
+            ))}
+          </div>
 
           <label>
             Squadra
-            <select
-              value={teamId}
-              onChange={(event) => setTeamId(event.target.value)}
+            <input
+              aria-label="Squadra"
+              value={teamQuery}
+              onChange={(event) => {
+                setTeamQuery(event.target.value);
+                setTeamId("");
+                setPlayerId("");
+              }}
+              placeholder="Digita squadra"
+              autoComplete="off"
               disabled={!competitionId || loading}
-            >
-              <option value="">Seleziona squadra</option>
-              {teams.map((team) => (
-                <option key={team.teamId} value={team.teamId}>
-                  {team.teamName}
-                </option>
-              ))}
-            </select>
+            />
           </label>
+          <div className="picker-suggest-list" data-testid="team-suggestions">
+            {teamSuggestions.map((team) => (
+              <button
+                key={team.teamId}
+                type="button"
+                className="picker-suggest-item"
+                onClick={() => {
+                  setTeamId(team.teamId);
+                  setTeamQuery(team.teamName);
+                }}
+              >
+                {team.teamName}
+              </button>
+            ))}
+          </div>
 
           <label>
             Giocatore
-            <select
-              value={playerId}
-              onChange={(event) => setPlayerId(event.target.value)}
+            <input
+              aria-label="Giocatore"
+              value={playerQuery}
+              onChange={(event) => {
+                setPlayerQuery(event.target.value);
+                setPlayerId("");
+              }}
+              placeholder="Digita giocatore"
+              autoComplete="off"
               disabled={!teamId || loading}
-            >
-              <option value="">Seleziona giocatore</option>
-              {players.map((player) => (
-                <option key={playerKey(player)} value={playerKey(player)}>
-                  {player.label}
-                </option>
-              ))}
-            </select>
+            />
           </label>
+          <div className="picker-suggest-list" data-testid="player-suggestions">
+            {playerSuggestions.map((player) => (
+              <button
+                key={playerKey(player)}
+                type="button"
+                className="picker-suggest-item"
+                onClick={() => {
+                  setPlayerId(playerKey(player));
+                  setPlayerQuery(player.label);
+                }}
+              >
+                {player.label}
+              </button>
+            ))}
+          </div>
 
           {selectedPlayer && (
             <div className="picker-preview">

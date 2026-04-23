@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap");
 
 :root {
   --bg: #f0f1ef;
@@ -26,7 +26,7 @@ body {
     radial-gradient(1200px 400px at -10% 5%, #ecd6bf 0%, transparent 55%),
     var(--bg);
   color: var(--ink);
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-family: "Lato", "Segoe UI", sans-serif;
 }
 
 #root {
@@ -58,22 +58,17 @@ body {
   gap: 12px;
 }
 
-.brand-mark {
-  width: 48px;
-  height: 48px;
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
   border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(130deg, #ce1f24, #f0bb18);
-  color: #fff;
-  font-family: "Merriweather", serif;
-  font-size: 1.5rem;
-  font-weight: 900;
+  background: #fff;
+  padding: 2px;
 }
 
 .board-header h1 {
   margin: 0;
-  font-family: "Merriweather", serif;
   letter-spacing: 0.3px;
 }
 
@@ -180,7 +175,7 @@ main {
   padding: 8px 11px;
   cursor: pointer;
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .tab-active {
@@ -247,7 +242,6 @@ main {
 
 .position-title {
   margin: 0 0 8px;
-  font-family: "Merriweather", serif;
   color: #17366d;
   letter-spacing: 0.2px;
 }
@@ -276,11 +270,11 @@ main {
 
 .scenario-title {
   text-align: center;
-  font-family: "Merriweather", serif;
   color: #fff;
   background: var(--accent);
   padding: 8px;
   font-size: 1.1rem;
+  font-weight: 800;
 }
 
 .lane-heads {
@@ -324,7 +318,7 @@ main {
 }
 
 .slot-drop-zone {
-  min-height: 178px;
+  min-height: 238px;
   border-right: 1px solid var(--line);
   background: #f7f8fb;
 }
@@ -336,9 +330,20 @@ main {
 .slot-card {
   height: 100%;
   padding: 8px;
-  background: linear-gradient(180deg, #fdfdfd, #f6f7fb);
   border: 2px solid transparent;
-  transition: border-color 130ms ease;
+  transition: border-color 130ms ease, background-color 130ms ease;
+}
+
+.slot-empty {
+  background: linear-gradient(180deg, #fdfdfd, #f6f7fb);
+  border-style: dashed;
+  border-color: #d9deeb;
+}
+
+.slot-filled {
+  background: linear-gradient(180deg, #eef4ff, #e5eefb);
+  border-color: #2c5eb2;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
 .slot-over {
@@ -372,6 +377,61 @@ main {
 
 .drag-handle {
   width: 38px;
+}
+
+.slot-player-head {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 6px;
+  border: 1px solid #bfd0ef;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.slot-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #acc2ea;
+}
+
+.slot-thumb-placeholder {
+  display: grid;
+  place-items: center;
+  background: #d9e5fb;
+  color: #355587;
+  font-weight: 900;
+}
+
+.slot-player-meta {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.slot-player-meta span {
+  font-size: 0.72rem;
+  color: #5b6d8d;
+  text-transform: uppercase;
+}
+
+.slot-player-link,
+.slot-player-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #12396f;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slot-player-link:hover {
+  text-decoration: underline;
 }
 
 .slot-fields {
@@ -475,7 +535,7 @@ main {
 .picker-body {
   padding: 12px 14px;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .picker-body label {
@@ -484,10 +544,34 @@ main {
   font-size: 0.85rem;
 }
 
-.picker-body select {
+.picker-body input {
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 8px 9px;
+}
+
+.picker-suggest-list {
+  display: grid;
+  gap: 5px;
+  margin-top: -2px;
+  margin-bottom: 4px;
+  max-height: 126px;
+  overflow: auto;
+}
+
+.picker-suggest-item {
+  border: 1px solid #d2d8e5;
+  background: #f8faff;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.picker-suggest-item:hover {
+  background: #eaf1ff;
+  border-color: #96aee0;
 }
 
 .picker-preview {
@@ -516,7 +600,7 @@ main {
   border: 0;
   cursor: pointer;
   padding: 8px 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .picker-actions .ghost {

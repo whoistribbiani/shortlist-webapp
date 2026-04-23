@@ -1,6 +1,12 @@
 import { EMPTY_SLOT_PAYLOAD } from "../constants/layout";
 import type { PlayerApiDoc, PlayerApiTeam, SlotPayload } from "../types";
 
+const SCOUTASTIC_ORIGIN = "https://genoacfc.scoutastic.com";
+
+function clean(value: string | undefined): string {
+  return (value ?? "").trim();
+}
+
 function pickMainTeam(teams: PlayerApiTeam[] | undefined): PlayerApiTeam | undefined {
   if (!teams || !Array.isArray(teams) || teams.length === 0) {
     return undefined;
@@ -24,17 +30,34 @@ function isoDateToYear(input: string | undefined): string {
   return /^\d{4}$/.test(year) ? year : "";
 }
 
+function resolvePlayerImageUrl(player: PlayerApiDoc): string {
+  const raw = clean(player.playerImageUrl) || clean(player.imageUrlV2) || clean(player.imageUrl);
+  if (!raw) {
+    return "";
+  }
+  try {
+    return new URL(raw).toString();
+  } catch {
+    try {
+      return new URL(raw, `${SCOUTASTIC_ORIGIN}/`).toString();
+    } catch {
+      return "";
+    }
+  }
+}
+
 export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: string): SlotPayload {
-  const firstName = (player.firstName ?? "").trim();
-  const lastName = (player.lastName ?? "").trim();
-  const fullName = (player.name ?? "").trim();
+  const firstName = clean(player.firstName);
+  const lastName = clean(player.lastName);
+  const fullName = clean(player.name);
   const mainTeam = pickMainTeam(player.teams);
 
   const name = firstName;
   const playerField = lastName || fullName || firstName;
-  const playerId = (player.playerId ?? player.id ?? player.internalId ?? "").trim();
-  const teamId = (mainTeam?.externalId ?? mainTeam?.teamId ?? mainTeam?.id ?? "").trim();
-  const club = (mainTeam?.name ?? "").trim();
+  const playerId = clean(player.playerId) || clean(player.id) || clean(player.internalId);
+  const playerInternalId = clean(player.internalId);
+  const teamId = clean(mainTeam?.externalId) || clean(mainTeam?.teamId) || clean(mainTeam?.id);
+  const club = clean(mainTeam?.name);
 
   return {
     ...EMPTY_SLOT_PAYLOAD,
@@ -44,14 +67,16 @@ export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: str
     age: isoDateToYear(player.dateOfBirth),
     expiring: isoDateToDay(player.contractExpires),
     playerId,
+    playerInternalId,
+    playerImageUrl: resolvePlayerImageUrl(player),
     teamId,
     competitionId: competitionId.trim()
   };
 }
 
 export function playerLabel(player: PlayerApiDoc): string {
-  const first = (player.firstName ?? "").trim();
-  const last = (player.lastName ?? "").trim();
+  const first = clean(player.firstName);
+  const last = clean(player.lastName);
   const full = `${first} ${last}`.trim();
   if (full) {
     return full;

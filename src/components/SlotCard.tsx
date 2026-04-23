@@ -1,7 +1,6 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
-import { FIELD_LABELS, SLOT_FIELDS } from "../constants/layout";
 import type { SlotEntry } from "../types";
 
 interface SlotCardProps {
@@ -13,19 +12,34 @@ interface SlotCardProps {
 }
 
 function isPopulated(slot: SlotEntry): boolean {
-  return !!(slot.playerId || slot.player || slot.name || slot.club || slot.age || slot.expiring);
+  return !!(
+    slot.playerId ||
+    slot.player ||
+    slot.name ||
+    slot.club ||
+    slot.age ||
+    slot.expiring ||
+    slot.playerImageUrl ||
+    slot.videoUrl
+  );
+}
+
+function scoutasticPlayerUrl(internalId: string): string {
+  return `https://genoacfc.scoutastic.com/#/player/${encodeURIComponent(internalId)}`;
 }
 
 export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicker }: SlotCardProps): JSX.Element {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: slotKey });
+  const filled = isPopulated(slot);
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: slotKey,
-    disabled: !isPopulated(slot)
+    disabled: !filled
   });
 
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
   const cardClassName = [
     "slot-card",
+    filled ? "slot-filled" : "slot-empty",
     isOver ? "slot-over" : "",
     isDragging ? "slot-dragging" : "",
     duplicateBlocked ? "slot-error" : ""
@@ -33,9 +47,11 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
     .filter(Boolean)
     .join(" ");
 
+  const canLinkProfile = !!slot.playerInternalId;
+
   return (
     <div ref={setDropRef} className="slot-drop-zone">
-      <article ref={setDragRef} style={style} className={cardClassName}>
+      <article ref={setDragRef} style={style} className={cardClassName} data-state={filled ? "filled" : "empty"}>
         <div className="slot-actions">
           <button type="button" className="pick-btn" onClick={() => onOpenPicker(slotKey)}>
             Seleziona player
@@ -45,17 +61,94 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
           </button>
         </div>
 
+        {filled && (
+          <div className="slot-player-head">
+            {slot.playerImageUrl ? (
+              <img className="slot-thumb" src={slot.playerImageUrl} alt={slot.player || "Player"} loading="lazy" />
+            ) : (
+              <div className="slot-thumb slot-thumb-placeholder" aria-hidden="true">
+                ?
+              </div>
+            )}
+            <div className="slot-player-meta">
+              {canLinkProfile ? (
+                <a
+                  className="slot-player-link"
+                  href={scoutasticPlayerUrl(slot.playerInternalId)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {slot.player || "Apri profilo"}
+                </a>
+              ) : (
+                <span className="slot-player-label">{slot.player || "Player"}</span>
+              )}
+              <span>{slot.club || "Club"}</span>
+            </div>
+          </div>
+        )}
+
         <div className="slot-fields">
-          {SLOT_FIELDS.map((field) => (
-            <label key={field}>
-              <span>{FIELD_LABELS[field]}</span>
-              <input
-                value={slot[field]}
-                onChange={(event) => onPatch(slotKey, { [field]: event.target.value } as Partial<SlotEntry>)}
-                placeholder={FIELD_LABELS[field]}
-              />
-            </label>
-          ))}
+          <label>
+            <span>Name</span>
+            <input
+              aria-label="Name"
+              value={slot.name}
+              onChange={(event) => onPatch(slotKey, { name: event.target.value })}
+              placeholder="Name"
+            />
+          </label>
+
+          <label>
+            <span>Player</span>
+            <input
+              aria-label="Player"
+              value={slot.player}
+              onChange={(event) => onPatch(slotKey, { player: event.target.value })}
+              placeholder="Player"
+            />
+          </label>
+
+          <label>
+            <span>Club</span>
+            <input
+              aria-label="Club"
+              value={slot.club}
+              onChange={(event) => onPatch(slotKey, { club: event.target.value })}
+              placeholder="Club"
+            />
+          </label>
+
+          <label>
+            <span>Age</span>
+            <input
+              aria-label="Age"
+              value={slot.age}
+              onChange={(event) => onPatch(slotKey, { age: event.target.value })}
+              placeholder="Age"
+            />
+          </label>
+
+          <label>
+            <span>Expiring</span>
+            <input
+              aria-label="Expiring"
+              value={slot.expiring}
+              onChange={(event) => onPatch(slotKey, { expiring: event.target.value })}
+              placeholder="Expiring"
+            />
+          </label>
+
+          <label>
+            <span>Video</span>
+            <input
+              aria-label="Video"
+              type="url"
+              value={slot.videoUrl}
+              onChange={(event) => onPatch(slotKey, { videoUrl: event.target.value })}
+              placeholder="https://..."
+            />
+          </label>
         </div>
       </article>
     </div>

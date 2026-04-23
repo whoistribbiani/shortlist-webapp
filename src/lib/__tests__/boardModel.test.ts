@@ -67,13 +67,20 @@ describe("boardModel", () => {
 
     const withPlayer = upsertSlotPayload(state, sourceKey, {
       playerId: "p-11",
+      playerInternalId: "internal-11",
+      playerImageUrl: "https://example.test/player.png",
       player: "MOVER",
-      club: "Genoa"
+      club: "Genoa",
+      videoUrl: "https://onedrive.live.com/video"
     });
 
     const moved = moveSlotPayload(withPlayer, sourceKey, targetKey);
     expect(moved[sourceKey].player).toBe("");
+    expect(moved[sourceKey].videoUrl).toBe("");
     expect(moved[targetKey].player).toBe("MOVER");
     expect(moved[targetKey].club).toBe("Genoa");
+    expect(moved[targetKey].playerInternalId).toBe("internal-11");
+    expect(moved[targetKey].playerImageUrl).toBe("https://example.test/player.png");
+    expect(moved[targetKey].videoUrl).toBe("https://onedrive.live.com/video");
   });
 });

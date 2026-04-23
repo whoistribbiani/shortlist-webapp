@@ -1,4 +1,4 @@
-﻿import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const emptyBoardResponse = {
   meta: {
@@ -11,7 +11,7 @@ const emptyBoardResponse = {
   slots: []
 };
 
-test("selects a player with 3-step flow and updates a slot", async ({ page }) => {
+test("selects a player with autocomplete flow and enriches the slot", async ({ page }) => {
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -41,8 +41,10 @@ test("selects a player with 3-step flow and updates a slot", async ({ page }) =>
           players: [
             {
               playerId: "player-1",
+              internalId: "internal-1",
               firstName: "Antoine",
               lastName: "Beydts",
+              playerImageUrl: "https://example.test/antoine.png",
               dateOfBirth: "2008-01-01T00:00:00.000Z",
               contractExpires: "2026-06-30T00:00:00.000Z",
               teams: [{ isMain: true, name: "Genoa CFC", externalId: "team-1" }]
@@ -79,11 +81,27 @@ test("selects a player with 3-step flow and updates a slot", async ({ page }) =>
   await page.goto("/?token=token-e2e");
   await page.getByRole("button", { name: "Seleziona player" }).first().click();
 
-  await page.getByLabel("Competizione").selectOption("IT1");
-  await page.getByLabel("Squadra").selectOption("team-1");
-  await page.getByLabel("Giocatore").selectOption("player-1");
+  await page.getByLabel("Competizione").fill("serie");
+  await page.locator("[data-testid='competition-suggestions']").getByRole("button", { name: /Serie A/ }).click();
+
+  await page.getByLabel("Squadra").fill("genoa");
+  await page.locator("[data-testid='team-suggestions']").getByRole("button", { name: "Genoa CFC" }).click();
+
+  await page.getByLabel("Giocatore").fill("beyd");
+  await page.locator("[data-testid='player-suggestions']").getByRole("button", { name: "Antoine Beydts" }).click();
+
   await page.getByRole("button", { name: "Applica" }).click();
 
-  await expect(page.getByLabel("Player").first()).toHaveValue("Beydts");
-  await expect(page.getByLabel("Name").first()).toHaveValue("Antoine");
+  const firstCard = page.locator(".slot-card").first();
+  await expect(firstCard).toHaveAttribute("data-state", "filled");
+  await expect(firstCard.getByLabel("Player")).toHaveValue("Beydts");
+  await expect(firstCard.getByLabel("Name")).toHaveValue("Antoine");
+  await expect(firstCard.locator(".slot-thumb")).toHaveAttribute("src", "https://example.test/antoine.png");
+  await expect(firstCard.locator(".slot-player-link")).toHaveAttribute(
+    "href",
+    "https://genoacfc.scoutastic.com/#/player/internal-1"
+  );
+
+  await firstCard.getByLabel("Video").fill("https://onedrive.live.com/watch?v=abc");
+  await expect(firstCard.getByLabel("Video")).toHaveValue("https://onedrive.live.com/watch?v=abc");
 });

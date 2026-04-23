@@ -5,7 +5,17 @@ import { allSlotCoordinatesForPosition, buildSlotKey, parseSlotKey } from "./slo
 export type BoardState = Record<string, SlotEntry>;
 
 function slotIsEmpty(slot: SlotEntry): boolean {
-  return !slot.playerId && !slot.player && !slot.name && !slot.club && !slot.age && !slot.expiring;
+  return (
+    !slot.playerId &&
+    !slot.player &&
+    !slot.name &&
+    !slot.club &&
+    !slot.age &&
+    !slot.expiring &&
+    !slot.videoUrl &&
+    !slot.playerInternalId &&
+    !slot.playerImageUrl
+  );
 }
 
 export function createInitialBoardState(): BoardState {
@@ -75,7 +85,10 @@ export function moveSlotPayload(state: BoardState, fromSlotKey: string, toSlotKe
     club: source.club,
     age: source.age,
     expiring: source.expiring,
+    videoUrl: source.videoUrl,
     playerId: source.playerId,
+    playerInternalId: source.playerInternalId,
+    playerImageUrl: source.playerImageUrl,
     teamId: source.teamId,
     competitionId: source.competitionId
   };

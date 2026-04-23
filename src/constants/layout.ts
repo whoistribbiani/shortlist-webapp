@@ -16,10 +16,10 @@ export const POSITIONS: PositionDefinition[] = [
 ];
 
 export const SCENARIOS: Array<{ id: ScenarioId; label: string }> = [
-  { id: "0-2", label: "Scenario 0 - 2 m/€" },
-  { id: "2-5", label: "Scenario 2 - 5 m/€" },
-  { id: "5-10", label: "Scenario 5 - 10 m/€" },
-  { id: "10-20", label: "Scenario 10 - 20 m/€" }
+  { id: "0-2", label: "Scenario 0 - 2 m/EUR" },
+  { id: "2-5", label: "Scenario 2 - 5 m/EUR" },
+  { id: "5-10", label: "Scenario 5 - 10 m/EUR" },
+  { id: "10-20", label: "Scenario 10 - 20 m/EUR" }
 ];
 
 export const LANES: Array<{ id: LaneId; label: string }> = [
@@ -30,12 +30,13 @@ export const LANES: Array<{ id: LaneId; label: string }> = [
 
 export const RANKS = [1, 2, 3, 4, 5, 6] as const;
 
-export const SLOT_FIELDS: Array<keyof Pick<SlotPayload, "name" | "player" | "club" | "age" | "expiring">> = [
+export const SLOT_FIELDS: Array<keyof Pick<SlotPayload, "name" | "player" | "club" | "age" | "expiring" | "videoUrl">> = [
   "name",
   "player",
   "club",
   "age",
-  "expiring"
+  "expiring",
+  "videoUrl"
 ];
 
 export const FIELD_LABELS: Record<(typeof SLOT_FIELDS)[number], string> = {
@@ -43,7 +44,8 @@ export const FIELD_LABELS: Record<(typeof SLOT_FIELDS)[number], string> = {
   player: "Player",
   club: "Club",
   age: "Age",
-  expiring: "Expiring"
+  expiring: "Expiring",
+  videoUrl: "Video"
 };
 
 export const EMPTY_SLOT_PAYLOAD: SlotPayload = {
@@ -52,7 +54,10 @@ export const EMPTY_SLOT_PAYLOAD: SlotPayload = {
   club: "",
   age: "",
   expiring: "",
+  videoUrl: "",
   playerId: "",
+  playerInternalId: "",
+  playerImageUrl: "",
   teamId: "",
   competitionId: ""
 };

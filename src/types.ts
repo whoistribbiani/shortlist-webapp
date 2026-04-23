@@ -35,7 +35,10 @@ export interface SlotPayload {
   club: string;
   age: string;
   expiring: string;
+  videoUrl: string;
   playerId: string;
+  playerInternalId: string;
+  playerImageUrl: string;
   teamId: string;
   competitionId: string;
 }
@@ -84,6 +87,9 @@ export interface PlayerApiDoc {
   name?: string;
   dateOfBirth?: string;
   contractExpires?: string;
+  imageUrlV2?: string;
+  imageUrl?: string;
+  playerImageUrl?: string;
   teams?: PlayerApiTeam[];
 }
 
