@@ -3,6 +3,8 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
 import { useAutoFitText } from "../hooks/useAutoFitText";
+import urlIcon from "../assets/url.png";
+import videoCameraIcon from "../assets/video-camera.png";
 import { buildPlayerImageProxyUrl } from "../lib/scoutasticMedia";
 import { isValidVideoUrl } from "../lib/videoUrl";
 import type { SlotEntry } from "../types";
@@ -262,16 +264,7 @@ export function SlotCard({
                 }
               }}
             >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path
-                  d="M6 10.7 11.2 5.5M9.5 4h3v3M7.7 4H4.6A1.6 1.6 0 0 0 3 5.6v5.8A1.6 1.6 0 0 0 4.6 13h5.8a1.6 1.6 0 0 0 1.6-1.6V8.3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <img src={videoCameraIcon} alt="" aria-hidden="true" className="video-link-icon" />
             </a>
             <button
               type="button"
@@ -285,12 +278,7 @@ export function SlotCard({
                 setIsVideoPopoverOpen((current) => !current);
               }}
             >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path
-                  d="M3 11.7V13h1.3l7-7-1.3-1.3-7 7ZM12.3 5l.7-.7a.9.9 0 0 0 0-1.3l-.9-.9a.9.9 0 0 0-1.3 0l-.7.7L12.3 5Z"
-                  fill="currentColor"
-                />
-              </svg>
+              <img src={urlIcon} alt="" aria-hidden="true" className="video-link-icon" />
             </button>
             {isVideoPopoverOpen && (
               <div className="video-popover" role="dialog" aria-label="Modifica URL video">

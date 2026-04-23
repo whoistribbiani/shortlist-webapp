@@ -598,6 +598,13 @@ main {
   display: block;
 }
 
+.video-link-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  object-fit: contain;
+}
+
 .video-icon-disabled {
   opacity: 0.45;
   cursor: not-allowed;
