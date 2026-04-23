@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -48,23 +49,47 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
     .join(" ");
 
   const canLinkProfile = !!slot.playerInternalId;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div ref={setDropRef} className="slot-drop-zone">
       <article ref={setDragRef} style={style} className={cardClassName} data-state={filled ? "filled" : "empty"}>
         <div className="slot-actions">
-          <button type="button" className="pick-btn" onClick={() => onOpenPicker(slotKey)}>
-            Seleziona player
+          <button
+            type="button"
+            className="pick-btn"
+            onClick={() => onOpenPicker(slotKey)}
+            title="Seleziona player"
+            aria-label="Seleziona player"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="4.5" />
+              <line x1="10.5" y1="10.5" x2="14" y2="14" />
+            </svg>
           </button>
           <button type="button" className="drag-handle" {...listeners} {...attributes} aria-label="Drag slot">
-            :::
+            <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+              <circle cx="2" cy="2" r="1.4" />
+              <circle cx="8" cy="2" r="1.4" />
+              <circle cx="2" cy="7" r="1.4" />
+              <circle cx="8" cy="7" r="1.4" />
+              <circle cx="2" cy="12" r="1.4" />
+              <circle cx="8" cy="12" r="1.4" />
+            </svg>
           </button>
         </div>
 
         {filled && (
           <div className="slot-player-head">
-            {slot.playerImageUrl ? (
-              <img className="slot-thumb" src={slot.playerImageUrl} alt={slot.player || "Player"} loading="lazy" />
+            {slot.playerImageUrl && !imgError ? (
+              <img
+                key={slot.playerImageUrl}
+                className="slot-thumb"
+                src={slot.playerImageUrl}
+                alt={slot.player || "Player"}
+                loading="lazy"
+                onError={() => setImgError(true)}
+              />
             ) : (
               <div className="slot-thumb slot-thumb-placeholder" aria-hidden="true">
                 ?
@@ -89,26 +114,6 @@ export function SlotCard({ slotKey, slot, duplicateBlocked, onPatch, onOpenPicke
         )}
 
         <div className="slot-fields">
-          <label>
-            <span>Name</span>
-            <input
-              aria-label="Name"
-              value={slot.name}
-              onChange={(event) => onPatch(slotKey, { name: event.target.value })}
-              placeholder="Name"
-            />
-          </label>
-
-          <label>
-            <span>Player</span>
-            <input
-              aria-label="Player"
-              value={slot.player}
-              onChange={(event) => onPatch(slotKey, { player: event.target.value })}
-              placeholder="Player"
-            />
-          </label>
-
           <label>
             <span>Club</span>
             <input
