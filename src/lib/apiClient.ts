@@ -59,7 +59,16 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with status ${response.status}`);
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as { error?: string; message?: string };
+        const msg = (parsed.error ?? parsed.message ?? "").trim();
+        throw new Error(msg || `Request failed with status ${response.status}`);
+      } catch {
+        throw new Error(text || `Request failed with status ${response.status}`);
+      }
+    }
+    throw new Error(`Request failed with status ${response.status}`);
   }
   return (await response.json()) as T;
 }

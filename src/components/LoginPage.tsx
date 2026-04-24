@@ -3,11 +3,13 @@ import { useState } from "react";
 interface LoginPageProps {
   onSubmit: (password: string) => Promise<void>;
   loading: boolean;
+  externalError?: string;
 }
 
-export function LoginPage({ onSubmit, loading }: LoginPageProps): JSX.Element {
+export function LoginPage({ onSubmit, loading, externalError = "" }: LoginPageProps): JSX.Element {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const displayError = error || externalError;
 
   return (
     <div className="login-page">
@@ -47,7 +49,7 @@ export function LoginPage({ onSubmit, loading }: LoginPageProps): JSX.Element {
             />
           </label>
 
-          {error && <p className="login-error">{error}</p>}
+          {displayError && <p className="login-error">{displayError}</p>}
 
           <button type="submit" disabled={loading}>
             {loading ? "Accesso..." : "Accedi"}

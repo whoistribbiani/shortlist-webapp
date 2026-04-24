@@ -55,6 +55,7 @@ export function RootApp({ apiBaseUrl }: RootAppProps): JSX.Element {
   const [authLoading, setAuthLoading] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAuthToken());
+  const [authError, setAuthError] = useState("");
 
   const api = useMemo(() => createApiClient(apiBaseUrl, getAuthToken), [apiBaseUrl]);
 
@@ -80,6 +81,7 @@ export function RootApp({ apiBaseUrl }: RootAppProps): JSX.Element {
         if (!result.valid) {
           clearAuthToken();
           setIsAuthenticated(false);
+          setAuthError("Sessione non valida. Reinserisci la password.");
           navigate(loginPath);
         }
       })
@@ -87,6 +89,7 @@ export function RootApp({ apiBaseUrl }: RootAppProps): JSX.Element {
         if (!cancelled) {
           clearAuthToken();
           setIsAuthenticated(false);
+          setAuthError("Sessione non valida o backend non aggiornato. Reinserisci la password.");
           navigate(loginPath);
         }
       })
@@ -120,13 +123,18 @@ export function RootApp({ apiBaseUrl }: RootAppProps): JSX.Element {
     return (
       <LoginPage
         loading={authLoading}
+        externalError={authError}
         onSubmit={async (password: string) => {
           setAuthLoading(true);
           try {
             const result = await api.login(password);
             setAuthToken(result.token);
             setIsAuthenticated(true);
+            setAuthError("");
             navigate(homePath);
+          } catch (err: unknown) {
+            setAuthError(err instanceof Error ? err.message : "Login non riuscito");
+            throw err;
           } finally {
             setAuthLoading(false);
           }
@@ -143,6 +151,7 @@ export function RootApp({ apiBaseUrl }: RootAppProps): JSX.Element {
         void api.logout().catch(() => undefined);
         clearAuthToken();
         setIsAuthenticated(false);
+        setAuthError("");
         navigate(loginPath);
       }}
     />
