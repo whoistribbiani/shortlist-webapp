@@ -1,3 +1,5 @@
+import emptyPlayerPlaceholder from "../assets/empty-player-placeholder.png";
+
 interface EmptySlotCardProps {
   onSelect: () => void;
 }
@@ -14,7 +16,9 @@ export function EmptySlotCard({ onSelect }: EmptySlotCardProps): JSX.Element {
     >
       <span className="empty-slot-plus">+</span>
       <span className="empty-slot-label">Aggiungi giocatore</span>
-      <span className="empty-slot-ghost" aria-hidden="true" />
+      <span className="empty-slot-ghost" aria-hidden="true">
+        <img className="empty-slot-ghost-image" src={emptyPlayerPlaceholder} alt="" />
+      </span>
     </button>
   );
 }
