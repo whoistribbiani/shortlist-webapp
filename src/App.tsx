@@ -177,6 +177,13 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
   }, [state, tab]);
 
   const activePosition = POSITIONS.find((position) => position.id === tab) ?? POSITIONS[0];
+  const activePositionTitle = useMemo(() => {
+    const parts = activePosition.title.split(" - ");
+    if (parts.length <= 1) {
+      return activePosition.title;
+    }
+    return parts.slice(1).join(" - ");
+  }, [activePosition.title]);
 
   function patchSlot(slotKey: string, patch: Partial<SlotPayload | SlotEntry>): void {
     setState((prev) => upsertSlotPayload(prev, slotKey, patch));
@@ -257,7 +264,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
       ) : (
         <>
           <h2 className="position-title">
-            {activePosition.id} - {activePosition.title}
+            {activePosition.id} - {activePositionTitle}
           </h2>
           <DndContext sensors={sensors} onDragEnd={onDragEnd}>
             <ScenarioGrid
