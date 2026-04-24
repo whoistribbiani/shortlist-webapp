@@ -1188,7 +1188,184 @@ main {
   color: #fff;
 }
 
-@media (max-width: 1200px) {
+@media (min-width: 768px) and (max-width: 1199px) {
+  .board-header {
+    align-items: flex-start;
+    gap: var(--space-12);
+    padding: var(--space-12) var(--space-16);
+  }
+
+  .brand-logo {
+    width: 52px;
+    height: 52px;
+  }
+
+  .board-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+  }
+
+  .meta-fields {
+    width: 100%;
+    flex-wrap: wrap;
+    row-gap: var(--space-8);
+  }
+
+  .meta-fields input,
+  .meta-fields select {
+    width: 166px;
+    padding: 8px 9px;
+    font-size: 0.92rem;
+  }
+
+  .board-status {
+    padding: 9px var(--space-16);
+  }
+
+  main {
+    padding: var(--space-12);
+  }
+
+  .top-toolbar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+
+  .position-tabs {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .export-btn {
+    margin-left: auto;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+  }
+
+  .share-link-bar {
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .copy-link-btn {
+    min-width: 96px;
+    padding: 8px 10px;
+  }
+
+  .position-title {
+    font-size: 1.72rem;
+  }
+
+  .scenario-board-scroll {
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    touch-action: pan-x;
+  }
+
+  .scenario-layout-grid {
+    grid-template-columns: 44px repeat(4, minmax(300px, 1fr));
+    min-width: 1258px;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .rank-column-card,
+  .scenario-column-card {
+    scroll-snap-align: start;
+  }
+
+  .rank-column-card {
+    position: sticky;
+    left: 0;
+    z-index: 9;
+    box-shadow: 3px 0 10px rgba(19, 39, 72, 0.08);
+    border-right-color: #b8c5d9;
+  }
+
+  .rank-column-header {
+    font-size: 1rem;
+  }
+
+  .rank-rows {
+    gap: 10px;
+    padding: 10px 4px;
+  }
+
+  .rank-row-card {
+    min-height: 262px;
+    font-size: 1.55rem;
+  }
+
+  .scenario-column-header {
+    min-height: 42px;
+    padding: 0 var(--space-12);
+  }
+
+  .scenario-column-header h3 {
+    font-size: 0.98rem;
+  }
+
+  .scenario-lane-head {
+    min-height: 26px;
+    font-size: 0.82rem;
+  }
+
+  .scenario-rows {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .scenario-slot-row {
+    gap: 10px;
+  }
+
+  .slot-drop-zone {
+    min-height: 262px;
+  }
+
+  .player-card-shell {
+    padding: 10px;
+  }
+
+  .slot-actions {
+    margin-bottom: 10px;
+  }
+
+  .slot-player-head {
+    margin-bottom: 10px;
+  }
+
+  .slot-fields {
+    margin-bottom: 10px;
+  }
+
+  .board-legend-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+  }
+
+  .board-legend-items {
+    gap: var(--space-12);
+  }
+
+  .legend-item {
+    font-size: 0.86rem;
+  }
+
+  .legend-save-time {
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
   .board-header {
     flex-direction: column;
     align-items: flex-start;
