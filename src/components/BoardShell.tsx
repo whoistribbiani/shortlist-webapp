@@ -8,6 +8,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 interface BoardShellProps {
   meta: BoardMeta;
   saveState: SaveState;
+  onLogout: () => void;
   onMetaChange: (patch: Partial<BoardMeta>) => void;
   children: ReactNode;
 }
@@ -25,7 +26,7 @@ function saveStateLabel(saveState: SaveState): string {
   }
 }
 
-export function BoardShell({ meta, saveState, onMetaChange, children }: BoardShellProps): JSX.Element {
+export function BoardShell({ meta, saveState, onLogout, onMetaChange, children }: BoardShellProps): JSX.Element {
   return (
     <div className="board-shell">
       <header className="board-header">
@@ -69,7 +70,12 @@ export function BoardShell({ meta, saveState, onMetaChange, children }: BoardShe
 
       <div className="board-status">
         <span className={`save-pill save-${saveState}`}>{saveStateLabel(saveState)}</span>
-        <span className="token-pill">Token: {meta.shareToken}</span>
+        <div className="status-actions">
+          <span className="token-pill">Accesso protetto</span>
+          <button type="button" className="logout-btn" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <main>{children}</main>

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const emptyBoardResponse = {
   meta: {
-    shareToken: "token-e2e",
+    shareToken: "internal-board",
     title: "Scouting ShortList",
     seasonId: "2026",
     gender: "male",
@@ -13,6 +13,7 @@ const emptyBoardResponse = {
 
 test("selects a player with autocomplete flow and enriches the slot", async ({ page }) => {
   let hasImageProxyRequest = false;
+  let hasAuthorizedApiCall = false;
   page.on("dialog", (dialog) => dialog.accept());
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -26,6 +27,27 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    const auth = route.request().headers()["authorization"] ?? "";
+    if (auth === "Bearer test-auth-token") {
+      hasAuthorizedApiCall = true;
+    }
+    if (route.request().method() === "POST" && path.includes("/auth/login")) {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ token: "test-auth-token" })
+      });
+    }
+    if (route.request().method() === "POST" && path.includes("/auth/validate")) {
+      if (auth !== "Bearer test-auth-token") {
+        return route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ valid: false }) });
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ valid: true }) });
+    }
+    if (route.request().method() === "POST" && path.includes("/auth/logout")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    }
+
     if (route.request().method() === "GET" && path.includes("/catalog/competitions")) {
       return route.fulfill({
         status: 200,
@@ -76,14 +98,14 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
         body: onePixelPng
       });
     }
-    if (route.request().method() === "GET" && path.includes("/board/")) {
+    if (route.request().method() === "GET" && path.includes("/board/current")) {
       return route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(emptyBoardResponse)
       });
     }
-    if (route.request().method() === "PUT" && path.includes("/board/")) {
+    if (route.request().method() === "PUT" && path.includes("/board/current")) {
       const body = route.request().postData() ?? "{}";
       return route.fulfill({
         status: 200,
@@ -91,7 +113,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
         body
       });
     }
-    if (route.request().method() === "POST" && path.includes("/export-xlsx")) {
+    if (route.request().method() === "POST" && path.includes("/board/current/export-xlsx")) {
       return route.fulfill({
         status: 200,
         contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -101,7 +123,11 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     return route.fulfill({ status: 404, body: "not mocked" });
   });
 
-  await page.goto("/?token=token-e2e");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Accesso ShortList" })).toBeVisible();
+  await page.getByLabel("Password").fill("owner-password");
+  await page.getByRole("button", { name: "Accedi" }).click();
+
   await page.getByTestId("copy-link-btn").click();
   await expect(page.getByTestId("copy-link-btn")).toHaveText("Copiato");
 
@@ -130,6 +156,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     "href",
     "https://genoacfc.scoutastic.com/#/player/internal-1"
   );
+  expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
 
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");

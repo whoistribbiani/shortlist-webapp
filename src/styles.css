@@ -186,6 +186,12 @@ textarea {
   border-bottom: 1px solid var(--line);
 }
 
+.status-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .save-pill,
 .token-pill {
   display: inline-flex;
@@ -219,6 +225,103 @@ textarea {
 .token-pill {
   background: #ecf0f8;
   color: #516181;
+}
+
+.logout-btn {
+  border: 1px solid #c5cfdf;
+  background: #fff;
+  color: #2f4368;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  color: #37527f;
+  font-weight: 700;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(1200px 500px at 80% 0%, #d7e2f7 0%, transparent 65%), var(--bg);
+  padding: 20px;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid #d4ddeb;
+  border-radius: 14px;
+  box-shadow: 0 20px 44px rgba(21, 41, 74, 0.16);
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.login-card h1 {
+  margin: 0;
+  color: #193768;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.login-card p {
+  margin: 0;
+  color: #5d6d88;
+  font-size: 0.93rem;
+}
+
+.login-card form {
+  display: grid;
+  gap: 10px;
+}
+
+.login-card label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #344969;
+}
+
+.login-card input {
+  border: 1px solid #cdd7e8;
+  border-radius: 8px;
+  padding: 10px 11px;
+  font-size: 0.95rem;
+}
+
+.login-card button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--navy-900);
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0;
+  border-radius: 8px;
+  background: #fde6e6;
+  color: #912f2f;
+  padding: 7px 9px;
+  font-size: 0.84rem;
 }
 
 main {

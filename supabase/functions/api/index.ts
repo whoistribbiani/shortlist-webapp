@@ -69,6 +69,13 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS"
 };
 
+interface AuthTokenPayload {
+  sub: string;
+  exp: number;
+}
+
+const SESSION_TTL_SECONDS = 12 * 60 * 60;
+
 function jsonResponse(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
     status,
@@ -81,6 +88,129 @@ function jsonResponse(payload: unknown, status = 200): Response {
 
 function clean(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function getDefaultBoardToken(): string {
+  const token = clean(Deno.env.get("APP_DEFAULT_BOARD_TOKEN") ?? "");
+  if (!token || !tokenIsValid(token)) {
+    throw new Error("Missing or invalid APP_DEFAULT_BOARD_TOKEN");
+  }
+  return token;
+}
+
+function parseUsersPasswords(): string[] {
+  const raw = clean(Deno.env.get("APP_USERS_PASSWORDS_JSON") ?? "");
+  if (!raw) {
+    throw new Error("Missing APP_USERS_PASSWORDS_JSON");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Invalid APP_USERS_PASSWORDS_JSON");
+  }
+
+  const list = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).passwords)
+      ? ((parsed as Record<string, unknown>).passwords as unknown[])
+      : [];
+
+  const out = list.map((item) => clean(item)).filter(Boolean);
+  if (out.length === 0) {
+    throw new Error("No valid passwords in APP_USERS_PASSWORDS_JSON");
+  }
+  return out;
+}
+
+function authSigningSecret(): string {
+  const secret = clean(Deno.env.get("APP_AUTH_SIGNING_SECRET") ?? "");
+  if (!secret) {
+    throw new Error("Missing APP_AUTH_SIGNING_SECRET");
+  }
+  return secret;
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  const binary = String.fromCharCode(...bytes);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const out = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    out[i] = binary.charCodeAt(i);
+  }
+  return out;
+}
+
+function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+async function importSigningKey(): Promise<CryptoKey> {
+  const secret = authSigningSecret();
+  const keyData = new TextEncoder().encode(secret);
+  return crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+
+async function signAuthPayload(payloadBase64: string): Promise<string> {
+  const key = await importSigningKey();
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadBase64));
+  return bytesToBase64Url(new Uint8Array(signature));
+}
+
+async function createAuthToken(payload: AuthTokenPayload): Promise<string> {
+  const payloadBase64 = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+  const signature = await signAuthPayload(payloadBase64);
+  return `${payloadBase64}.${signature}`;
+}
+
+async function verifyAuthToken(token: string): Promise<AuthTokenPayload | null> {
+  const [payloadBase64, signatureBase64] = token.split(".");
+  if (!payloadBase64 || !signatureBase64) {
+    return null;
+  }
+
+  const expectedSignature = await signAuthPayload(payloadBase64);
+  const expectedBytes = base64UrlToBytes(expectedSignature);
+  const gotBytes = base64UrlToBytes(signatureBase64);
+  if (!timingSafeEqual(expectedBytes, gotBytes)) {
+    return null;
+  }
+
+  try {
+    const payloadText = new TextDecoder().decode(base64UrlToBytes(payloadBase64));
+    const parsed = JSON.parse(payloadText) as Partial<AuthTokenPayload>;
+    const exp = Number(parsed.exp ?? 0);
+    if (!Number.isFinite(exp) || exp <= Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+    return {
+      sub: clean(parsed.sub),
+      exp
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parseBearerToken(request: Request): string {
+  const auth = clean(request.headers.get("authorization") ?? "");
+  if (!auth.toLowerCase().startsWith("bearer ")) {
+    return "";
+  }
+  return clean(auth.slice(7));
 }
 
 function tokenIsValid(token: string): boolean {
@@ -521,6 +651,14 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
   return fetchBoardDocument(shareToken);
 }
 
+async function requireAuth(request: Request): Promise<AuthTokenPayload | null> {
+  const token = parseBearerToken(request);
+  if (!token) {
+    return null;
+  }
+  return verifyAuthToken(token);
+}
+
 function buildPositionSheet(meta: BoardMeta, position: (typeof POSITIONS)[number], slotIndex: Map<string, SlotEntry>) {
   const rows = Array.from({ length: 48 }, () => Array(17).fill(""));
 
@@ -689,6 +827,40 @@ Deno.serve(async (request) => {
     const segments = parsePath(request.url);
     const method = request.method.toUpperCase();
 
+    if (segments[0] === "auth" && segments[1] === "login" && method === "POST") {
+      const body = (await request.json()) as { password?: string };
+      const password = clean(body?.password ?? "");
+      if (!password) {
+        return jsonResponse({ error: "password is required" }, 400);
+      }
+      const validPasswords = parseUsersPasswords();
+      if (!validPasswords.includes(password)) {
+        return jsonResponse({ error: "Invalid credentials" }, 401);
+      }
+      const token = await createAuthToken({
+        sub: "owner-managed-user",
+        exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS
+      });
+      return jsonResponse({ token });
+    }
+
+    if (segments[0] === "auth" && segments[1] === "validate" && method === "POST") {
+      const auth = await requireAuth(request);
+      if (!auth) {
+        return jsonResponse({ valid: false }, 401);
+      }
+      return jsonResponse({ valid: true, exp: auth.exp });
+    }
+
+    if (segments[0] === "auth" && segments[1] === "logout" && method === "POST") {
+      return jsonResponse({ ok: true });
+    }
+
+    const auth = await requireAuth(request);
+    if (!auth) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
     if (segments[0] === "catalog" && segments[1] === "competitions" && method === "GET") {
       const url = new URL(request.url);
       const seasonId = clean(url.searchParams.get("seasonId")) || "2026";
@@ -728,30 +900,19 @@ Deno.serve(async (request) => {
       return proxyScoutasticPlayerImage(source);
     }
 
-    if (segments[0] === "board" && segments[1] && method === "GET") {
-      const shareToken = clean(segments[1]);
-      if (!tokenIsValid(shareToken)) {
-        return jsonResponse({ error: "Invalid share token" }, 400);
-      }
-      const board = await fetchBoardDocument(shareToken);
+    if (segments[0] === "board" && segments[1] === "current" && method === "GET") {
+      const board = await fetchBoardDocument(getDefaultBoardToken());
       return jsonResponse(board);
     }
 
-    if (segments[0] === "board" && segments[1] && method === "PUT") {
-      const shareToken = clean(segments[1]);
-      if (!tokenIsValid(shareToken)) {
-        return jsonResponse({ error: "Invalid share token" }, 400);
-      }
+    if (segments[0] === "board" && segments[1] === "current" && method === "PUT") {
       const payload = (await request.json()) as BoardDocument;
-      const board = await saveBoardDocument(shareToken, payload);
+      const board = await saveBoardDocument(getDefaultBoardToken(), payload);
       return jsonResponse(board);
     }
 
-    if (segments[0] === "board" && segments[1] && segments[2] === "export-xlsx" && method === "POST") {
-      const shareToken = clean(segments[1]);
-      if (!tokenIsValid(shareToken)) {
-        return jsonResponse({ error: "Invalid share token" }, 400);
-      }
+    if (segments[0] === "board" && segments[1] === "current" && segments[2] === "export-xlsx" && method === "POST") {
+      const shareToken = getDefaultBoardToken();
       const payload = (await request.json()) as BoardDocument;
       const normalizedSlots = Array.isArray(payload.slots)
         ? payload.slots.map((slot) => normalizeSlot(slot)).filter((slot): slot is SlotEntry => slot !== null)
@@ -774,6 +935,10 @@ Deno.serve(async (request) => {
           "Content-Disposition": `attachment; filename=\"shortlist-${shareToken}.xlsx\"`
         }
       });
+    }
+
+    if (segments[0] === "board" && segments[1] && (method === "GET" || method === "PUT" || method === "POST")) {
+      return jsonResponse({ error: "Legacy board routes are disabled. Use /board/current." }, 404);
     }
 
     return jsonResponse({ error: "Not found" }, 404);

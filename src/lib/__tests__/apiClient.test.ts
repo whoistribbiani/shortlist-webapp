@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createApiClient } from "../apiClient";
 
@@ -42,5 +42,39 @@ describe("apiClient", () => {
 
     const calledUrl = String(mockFetch.mock.calls[0]?.[0] ?? "");
     expect(calledUrl).toContain("/api/catalog/competitions?seasonId=2026&gender=male");
+  });
+
+  it("adds bearer token on protected requests", async () => {
+    const mockFetch = vi.fn(async () =>
+      new Response(JSON.stringify({ meta: { shareToken: "", title: "", seasonId: "2026", gender: "male", updatedAt: "" }, slots: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
+
+    const api = createApiClient("https://api.example.test", () => "token-123");
+    await api.getBoardCurrent();
+
+    const init = (mockFetch.mock.calls[0]?.[1] ?? {}) as RequestInit;
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer token-123");
+  });
+
+  it("calls login without bearer header", async () => {
+    const mockFetch = vi.fn(async () =>
+      new Response(JSON.stringify({ token: "abc" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
+
+    const api = createApiClient("https://api.example.test", () => "token-123");
+    await api.login("pass");
+
+    const init = (mockFetch.mock.calls[0]?.[1] ?? {}) as RequestInit;
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBeUndefined();
   });
 });

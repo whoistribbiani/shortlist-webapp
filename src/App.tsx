@@ -10,7 +10,7 @@ import { ScenarioGrid } from "./components/ScenarioGrid";
 import { ShareLinkBar } from "./components/ShareLinkBar";
 import { POSITIONS } from "./constants/layout";
 import { useDebouncedEffect } from "./hooks/useDebouncedEffect";
-import { createApiClient } from "./lib/apiClient";
+import type { ApiClient } from "./lib/apiClient";
 import {
   arrayToBoardState,
   boardStateToArray,
@@ -22,20 +22,21 @@ import {
   type BoardState
 } from "./lib/boardModel";
 import { resolveSeasonIdFromEnv } from "./lib/season";
-import { ensureShareTokenInUrl } from "./lib/shareToken";
 import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
 import type { BoardMeta, PositionId, SlotEntry, SlotPayload } from "./types";
 
 interface AppProps {
   apiBaseUrl: string;
+  api: ApiClient;
+  onLogout: () => void;
 }
 
-function defaultMeta(shareToken: string): BoardMeta {
+function defaultMeta(): BoardMeta {
   const defaultSeason = resolveSeasonIdFromEnv(import.meta.env.VITE_DEFAULT_SEASON_ID, new Date());
   const defaultGender = import.meta.env.VITE_DEFAULT_GENDER === "female" ? "female" : "male";
   return {
-    shareToken,
+    shareToken: "",
     title: "Scouting ShortList",
     seasonId: defaultSeason,
     gender: defaultGender,
@@ -98,10 +99,8 @@ function formatSaveTime(value: string): string {
   }).format(date);
 }
 
-export default function App({ apiBaseUrl }: AppProps): JSX.Element {
-  const api = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl]);
-  const [shareToken] = useState(() => ensureShareTokenInUrl());
-  const [meta, setMeta] = useState<BoardMeta>(() => defaultMeta(shareToken));
+export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Element {
+  const [meta, setMeta] = useState<BoardMeta>(() => defaultMeta());
   const [state, setState] = useState<BoardState>(() => createInitialBoardState());
   const [tab, setTab] = useState<PositionId | "RECAP">("1-GK");
   const [pickerSlotKey, setPickerSlotKey] = useState<string | null>(null);
@@ -116,15 +115,14 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
   useEffect(() => {
     let cancelled = false;
     void api
-      .getBoard(shareToken)
+      .getBoardCurrent()
       .then((board) => {
         if (cancelled) {
           return;
         }
         setMeta((prev) => ({
           ...prev,
-          ...board.meta,
-          shareToken
+          ...board.meta
         }));
         setLastSavedAt(board.meta.updatedAt || "");
         setState(arrayToBoardState(board.slots));
@@ -143,7 +141,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [api, shareToken]);
+  }, [api]);
 
   useDebouncedEffect(
     () => {
@@ -152,7 +150,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
       }
       setSaveState("saving");
       void api
-        .putBoard(shareToken, payloadForSave(meta, state))
+        .putBoardCurrent(payloadForSave(meta, state))
         .then(() => {
           const now = new Date().toISOString();
           setLastSavedAt(now);
@@ -167,7 +165,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
         });
     },
     900,
-    [api, hydrated, meta.title, meta.seasonId, meta.gender, shareToken, state]
+    [api, hydrated, meta.title, meta.seasonId, meta.gender, state]
   );
 
   const duplicateSlotKeys = useMemo(() => {
@@ -221,15 +219,16 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
   }
 
   async function onExport(): Promise<void> {
-    const blob = await api.exportBoard(shareToken, payloadForSave(meta, state));
-    downloadBlob(blob, `shortlist-${shareToken}.xlsx`);
+    const blob = await api.exportBoardCurrent(payloadForSave(meta, state));
+    downloadBlob(blob, `shortlist-board.xlsx`);
   }
 
   const shareLink = useMemo(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set("token", shareToken);
+    url.search = "";
+    url.hash = "";
     return url.toString();
-  }, [shareToken]);
+  }, []);
 
   const saveDisplayTime = useMemo(() => formatSaveTime(lastSavedAt || meta.updatedAt), [lastSavedAt, meta.updatedAt]);
 
@@ -237,6 +236,7 @@ export default function App({ apiBaseUrl }: AppProps): JSX.Element {
     <BoardShell
       meta={meta}
       saveState={saveState}
+      onLogout={onLogout}
       onMetaChange={(patch) => {
         setMeta((prev) => ({ ...prev, ...patch }));
       }}

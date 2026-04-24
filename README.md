@@ -2,10 +2,11 @@
 
 Webapp React + TypeScript per costruire shortlist scouting per posizione, con:
 - 12 board posizione + tab `Recap` read-only
+- login password-only (`/login`)
 - inserimento player con flusso `Competizione -> Squadra -> Giocatore`
 - drag&drop slot-to-slot (move)
 - blocco duplicati nella stessa posizione
-- autosave cloud tramite link privato (`share token`)
+- autosave cloud su board interna protetta
 - export `.xlsx` compatibile (Overview + Recap + 12 sheet posizione)
 
 ## Stack
@@ -44,6 +45,9 @@ npx supabase functions deploy api --no-verify-jwt
 ```
 
 ### Secrets richiesti (Supabase)
+- `APP_USERS_PASSWORDS_JSON` (lista password gestita dal proprietario)
+- `APP_AUTH_SIGNING_SECRET`
+- `APP_DEFAULT_BOARD_TOKEN`
 - `SCOUTASTIC_BASE_URL`
 - `SCOUTASTIC_ACCESS_KEY` oppure host-specific:
   - `SCOUTASTIC_ACCESS_KEY_SCOUTINGDEPARTMENT`
@@ -52,12 +56,15 @@ npx supabase functions deploy api --no-verify-jwt
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 ## API implementate
+- `POST /api/auth/login`
+- `POST /api/auth/validate`
+- `POST /api/auth/logout`
 - `GET /api/catalog/competitions?seasonId=&gender=male`
 - `GET /api/catalog/teams?competitionId=&seasonId=`
 - `GET /api/catalog/players?teamId=&seasonId=`
-- `GET /api/board/{shareToken}`
-- `PUT /api/board/{shareToken}`
-- `POST /api/board/{shareToken}/export-xlsx`
+- `GET /api/board/current`
+- `PUT /api/board/current`
+- `POST /api/board/current/export-xlsx`
 
 ## GitHub Pages (Project Pages)
 Il `base` Vite viene impostato automaticamente in CI usando `GITHUB_REPOSITORY`, quindi in produzione usa `/<nome-repo>/` e in locale resta `/`.
