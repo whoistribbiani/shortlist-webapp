@@ -943,12 +943,18 @@ main {
   font-size: 0.95rem;
   font-weight: 800;
   color: #405d8e;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .empty-slot-ghost {
   margin-top: var(--space-12);
-  width: 96px;
-  height: 72px;
+  width: min(96px, 100%);
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
   border: 1px solid #edf1f8;
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(245, 248, 253, 0.95), rgba(239, 243, 250, 0.95));
@@ -1343,6 +1349,26 @@ main {
 
   .slot-fields {
     margin-bottom: 10px;
+  }
+
+  .empty-slot-card {
+    padding: 10px 8px;
+    gap: 4px;
+  }
+
+  .empty-slot-plus {
+    width: 22px;
+    height: 22px;
+    font-size: 1.2rem;
+  }
+
+  .empty-slot-label {
+    font-size: 0.78rem;
+  }
+
+  .empty-slot-ghost {
+    width: min(72px, 100%);
+    margin-top: 8px;
   }
 
   .board-legend-row {
