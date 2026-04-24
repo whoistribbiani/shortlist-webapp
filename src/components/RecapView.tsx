@@ -1,12 +1,36 @@
 import { FIELD_LABELS, LANES, POSITIONS, SCENARIOS, SLOT_FIELDS } from "../constants/layout";
 import type { BoardState } from "../lib/boardModel";
 import { buildSlotKey } from "../lib/slotKey";
+import { isValidVideoUrl } from "../lib/videoUrl";
+import videoCameraIcon from "../assets/video-camera.png";
 
 interface RecapViewProps {
   state: BoardState;
 }
 
 export function RecapView({ state }: RecapViewProps): JSX.Element {
+  function renderCellValue(field: (typeof SLOT_FIELDS)[number], value: string): JSX.Element | string {
+    if (field !== "videoUrl") {
+      return value;
+    }
+    const videoUrl = value.trim();
+    if (!isValidVideoUrl(videoUrl)) {
+      return "-";
+    }
+    return (
+      <a
+        className="recap-video-link"
+        href={videoUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Apri video"
+        title="Apri video"
+      >
+        <img src={videoCameraIcon} alt="" aria-hidden="true" />
+      </a>
+    );
+  }
+
   return (
     <section className="recap-view" data-testid="recap-view">
       {POSITIONS.map((position) => (
@@ -42,7 +66,7 @@ export function RecapView({ state }: RecapViewProps): JSX.Element {
                           lane: lane.id
                         });
                         const slot = state[key];
-                        return <td key={`${key}-${field}`}>{slot[field]}</td>;
+                        return <td key={`${key}-${field}`}>{renderCellValue(field, slot[field])}</td>;
                       })
                     )}
                   </tr>
