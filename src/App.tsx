@@ -24,7 +24,7 @@ import {
 import { resolveSeasonIdFromEnv } from "./lib/season";
 import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
-import type { BoardMeta, PositionId, SlotEntry, SlotPayload } from "./types";
+import type { BoardDocument, BoardMeta, PositionId, SlotEntry, SlotPayload } from "./types";
 
 interface AppProps {
   apiBaseUrl: string;
@@ -34,20 +34,20 @@ interface AppProps {
 
 function defaultMeta(): BoardMeta {
   const defaultSeason = resolveSeasonIdFromEnv(import.meta.env.VITE_DEFAULT_SEASON_ID, new Date());
-  const defaultGender = import.meta.env.VITE_DEFAULT_GENDER === "female" ? "female" : "male";
   return {
     shareToken: "",
     title: "Scouting ShortList",
     seasonId: defaultSeason,
-    gender: defaultGender,
+    gender: "male",
     updatedAt: new Date().toISOString()
   };
 }
 
-function payloadForSave(meta: BoardMeta, state: BoardState) {
+function payloadForSave(meta: BoardMeta, state: BoardState): BoardDocument {
   return {
     meta: {
       ...meta,
+      gender: "male" as const,
       updatedAt: new Date().toISOString()
     },
     slots: boardStateToArray(state)
@@ -122,7 +122,8 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
         }
         setMeta((prev) => ({
           ...prev,
-          ...board.meta
+          ...board.meta,
+          gender: "male"
         }));
         setLastSavedAt(board.meta.updatedAt || "");
         setState(arrayToBoardState(board.slots));
@@ -238,7 +239,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
       saveState={saveState}
       onLogout={onLogout}
       onMetaChange={(patch) => {
-        setMeta((prev) => ({ ...prev, ...patch }));
+        setMeta((prev) => ({ ...prev, ...patch, gender: "male" }));
       }}
     >
       <div className="top-toolbar">

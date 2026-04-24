@@ -55,16 +55,6 @@ export function BoardShell({ meta, saveState, onLogout, onMetaChange, children }
               placeholder="2026"
             />
           </label>
-          <label>
-            Gender
-            <select
-              value={meta.gender}
-              onChange={(event) => onMetaChange({ gender: event.target.value as BoardMeta["gender"] })}
-            >
-              <option value="male">male</option>
-              <option value="female">female</option>
-            </select>
-          </label>
         </div>
       </header>
 
