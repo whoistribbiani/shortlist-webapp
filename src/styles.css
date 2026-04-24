@@ -804,7 +804,6 @@ main {
   justify-content: end;
   gap: var(--space-8);
   margin-top: auto;
-  position: relative;
 }
 
 .video-icon-btn {
@@ -845,25 +844,31 @@ main {
   pointer-events: auto;
 }
 
-.video-popover {
-  position: absolute;
-  top: 34px;
-  right: 0;
-  z-index: 5;
-  width: min(260px, calc(100vw - 52px));
-  border: 1px solid #c2cde2;
-  border-radius: var(--radius-xs);
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(23, 39, 72, 0.18);
-  padding: 8px;
+.video-popover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 18, 33, 0.5);
+  padding: var(--space-16);
 }
 
-.video-popover input {
+.video-popover-modal {
+  width: min(360px, calc(100vw - 36px));
+  border: 1px solid #c2cde2;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  box-shadow: 0 24px 44px rgba(15, 31, 58, 0.25);
+  padding: var(--space-12);
+}
+
+.video-popover-modal input {
   width: 100%;
   border: 1px solid #d5deed;
   border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 0.8rem;
+  padding: 8px 9px;
+  font-size: 0.85rem;
 }
 
 .video-popover-error {
@@ -882,10 +887,10 @@ main {
 .video-popover-actions button {
   border: 1px solid #d0d8e8;
   border-radius: 6px;
-  padding: 6px 4px;
+  padding: 7px 5px;
   background: #f7f9fd;
   color: #2b3f64;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
 }

@@ -161,12 +161,14 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
 
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
   await firstCard.getByTestId("video-edit").click();
-  await firstCard
+  await expect(page.getByTestId("video-popover-overlay")).toBeVisible();
+  await page
     .getByTestId("video-popover-input")
     .fill("https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore");
-  await firstCard.getByTestId("video-popover-save").evaluate((element) => {
+  await page.getByTestId("video-popover-save").evaluate((element) => {
     (element as HTMLButtonElement).click();
   });
+  await expect(page.getByTestId("video-popover-overlay")).toHaveCount(0);
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute(
     "href",
     "https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore"
@@ -174,9 +176,11 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "false");
 
   await firstCard.getByTestId("video-edit").click();
-  await firstCard.getByTestId("video-popover-remove").evaluate((element) => {
+  await expect(page.getByTestId("video-popover-overlay")).toBeVisible();
+  await page.getByTestId("video-popover-remove").evaluate((element) => {
     (element as HTMLButtonElement).click();
   });
+  await expect(page.getByTestId("video-popover-overlay")).toHaveCount(0);
   await expect(firstCard.getByTestId("video-open")).not.toHaveAttribute("href", /https?:\/\//);
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
 
