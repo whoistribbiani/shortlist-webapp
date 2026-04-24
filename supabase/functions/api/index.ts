@@ -856,6 +856,15 @@ Deno.serve(async (request) => {
       return jsonResponse({ ok: true });
     }
 
+    if (segments[0] === "catalog" && segments[1] === "player-image" && method === "GET") {
+      const url = new URL(request.url);
+      const source = clean(url.searchParams.get("src"));
+      if (!source) {
+        return jsonResponse({ error: "src is required" }, 400);
+      }
+      return proxyScoutasticPlayerImage(source);
+    }
+
     const auth = await requireAuth(request);
     if (!auth) {
       return jsonResponse({ error: "Unauthorized" }, 401);
@@ -889,15 +898,6 @@ Deno.serve(async (request) => {
       }
       const players = await fetchPlayersByTeam(teamId, seasonId);
       return jsonResponse({ players });
-    }
-
-    if (segments[0] === "catalog" && segments[1] === "player-image" && method === "GET") {
-      const url = new URL(request.url);
-      const source = clean(url.searchParams.get("src"));
-      if (!source) {
-        return jsonResponse({ error: "src is required" }, 400);
-      }
-      return proxyScoutasticPlayerImage(source);
     }
 
     if (segments[0] === "board" && segments[1] === "current" && method === "GET") {
