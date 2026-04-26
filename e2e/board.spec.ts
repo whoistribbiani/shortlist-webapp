@@ -187,7 +187,13 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   const noOverflow = await firstCard.locator(".slot-player-link, .autofit-text, .autofit-input").evaluateAll((els) =>
     els.every((el) => {
       const fontSize = Number.parseFloat(window.getComputedStyle(el).fontSize || "0");
-      return el.scrollWidth <= el.clientWidth + 1 || fontSize <= 10.1;
+      const minReadableSize =
+        el.classList.contains("slot-player-link") || el.classList.contains("slot-player-label")
+          ? 14.1
+          : el.classList.contains("slot-player-team")
+            ? 11.1
+            : 10.1;
+      return el.scrollWidth <= el.clientWidth + 1 || fontSize <= minReadableSize;
     })
   );
   expect(noOverflow).toBe(true);

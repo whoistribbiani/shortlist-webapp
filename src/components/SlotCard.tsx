@@ -76,9 +76,9 @@ export function SlotCard({
   const playerNameText = slot.player || (canLinkProfile ? "Apri profilo" : "Player");
   const playerClubText = slot.club || "Club";
 
-  const playerNameLinkFit = useAutoFitText(playerNameLinkRef, playerNameText, { minFontSize: 12, maxFontSize: 24 });
-  const playerNameLabelFit = useAutoFitText(playerNameLabelRef, playerNameText, { minFontSize: 12, maxFontSize: 24 });
-  const playerClubFit = useAutoFitText(playerClubRef, playerClubText, { minFontSize: 10, maxFontSize: 14 });
+  const playerNameLinkFit = useAutoFitText(playerNameLinkRef, playerNameText, { minFontSize: 14, maxFontSize: 31 });
+  const playerNameLabelFit = useAutoFitText(playerNameLabelRef, playerNameText, { minFontSize: 14, maxFontSize: 31 });
+  const playerClubFit = useAutoFitText(playerClubRef, playerClubText, { minFontSize: 11, maxFontSize: 16 });
   const clubInputFit = useAutoFitText(clubInputRef, slot.club, { minFontSize: 10, maxFontSize: 15 });
   const ageInputFit = useAutoFitText(ageInputRef, slot.age, { minFontSize: 10, maxFontSize: 15 });
   const expiringInputFit = useAutoFitText(expiringInputRef, slot.expiring, { minFontSize: 10, maxFontSize: 15 });

@@ -2,6 +2,7 @@
 dist/
 playwright-report/
 test-results/
+.superpowers/
 *.tsbuildinfo
 .env.local
 supabase/.temp/
