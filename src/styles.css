@@ -626,6 +626,7 @@ main {
   border: 1px solid #e0e6f0;
   transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
   position: relative;
+  overflow: hidden;
 }
 
 .slot-card-filled {
@@ -652,8 +653,11 @@ main {
 .player-card-shell {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 100%;
   padding: var(--space-12);
+  padding-bottom: 48px;
+  position: relative;
 }
 
 .slot-actions {
@@ -760,7 +764,7 @@ main {
 .slot-fields {
   display: grid;
   gap: 6px;
-  margin-bottom: var(--space-12);
+  margin-bottom: 0;
   width: 100%;
   min-width: 0;
 }
@@ -806,7 +810,9 @@ main {
   grid-template-columns: repeat(3, 28px);
   justify-content: end;
   gap: var(--space-8);
-  margin-top: auto;
+  position: absolute;
+  right: var(--space-12);
+  bottom: var(--space-12);
 }
 
 .video-icon-btn {
@@ -1312,7 +1318,7 @@ main {
   }
 
   .scenario-layout-grid {
-    --slot-size: 262px;
+    --slot-size: 296px;
     --scenario-column-width: calc((var(--slot-size) * 3) + (10px * 4));
     grid-template-columns: 44px repeat(4, minmax(var(--scenario-column-width), 1fr));
     min-width: calc(44px + (var(--scenario-column-width) * 4) + (10px * 4) + 20px);
@@ -1376,6 +1382,7 @@ main {
 
   .player-card-shell {
     padding: 10px;
+    padding-bottom: 46px;
   }
 
   .slot-actions {
@@ -1387,7 +1394,12 @@ main {
   }
 
   .slot-fields {
-    margin-bottom: 10px;
+    margin-bottom: 0;
+  }
+
+  .slot-footer-actions {
+    right: 10px;
+    bottom: 10px;
   }
 
   .empty-slot-card {

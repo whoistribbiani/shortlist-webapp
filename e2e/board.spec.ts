@@ -192,6 +192,39 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   );
   expect(noOverflow).toBe(true);
 
+  const footerInsideCard = await firstCard.evaluate((card) => {
+    const footer = card.querySelector(".slot-footer-actions");
+    if (!footer) {
+      return false;
+    }
+    const cardRect = card.getBoundingClientRect();
+    const footerRect = footer.getBoundingClientRect();
+    return (
+      footerRect.left >= cardRect.left &&
+      footerRect.top >= cardRect.top &&
+      footerRect.right <= cardRect.right &&
+      footerRect.bottom <= cardRect.bottom
+    );
+  });
+  expect(footerInsideCard).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 780 });
+  const mobileFooterInsideCard = await firstCard.evaluate((card) => {
+    const footer = card.querySelector(".slot-footer-actions");
+    if (!footer) {
+      return false;
+    }
+    const cardRect = card.getBoundingClientRect();
+    const footerRect = footer.getBoundingClientRect();
+    return (
+      footerRect.left >= cardRect.left &&
+      footerRect.top >= cardRect.top &&
+      footerRect.right <= cardRect.right &&
+      footerRect.bottom <= cardRect.bottom
+    );
+  });
+  expect(mobileFooterInsideCard).toBe(true);
+
   await firstCard.getByTestId("slot-remove").evaluate((element) => {
     (element as HTMLButtonElement).click();
   });
