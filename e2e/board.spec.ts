@@ -156,6 +156,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     "href",
     "https://genoacfc.scoutastic.com/#/player/internal-1"
   );
+  await expect(firstCard.locator(".slot-player-first-name")).toHaveText("Antoine");
   expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
 
@@ -190,6 +191,8 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
       const minReadableSize =
         el.classList.contains("slot-player-link") || el.classList.contains("slot-player-label")
           ? 14.1
+          : el.classList.contains("slot-player-first-name")
+            ? 11.1
           : el.classList.contains("slot-player-team")
             ? 11.1
             : 10.1;

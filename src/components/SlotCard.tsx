@@ -63,6 +63,7 @@ export function SlotCard({
 
   const playerNameLinkRef = useRef<HTMLAnchorElement | null>(null);
   const playerNameLabelRef = useRef<HTMLSpanElement | null>(null);
+  const playerFirstNameRef = useRef<HTMLSpanElement | null>(null);
   const playerClubRef = useRef<HTMLSpanElement | null>(null);
   const clubInputRef = useRef<HTMLInputElement | null>(null);
   const ageInputRef = useRef<HTMLInputElement | null>(null);
@@ -73,9 +74,11 @@ export function SlotCard({
     [apiBaseUrl, slot.playerImageUrl]
   );
   const hasValidVideoUrl = isValidVideoUrl(slot.videoUrl);
+  const playerFirstNameText = slot.name.trim();
   const playerNameText = slot.player || (canLinkProfile ? "Apri profilo" : "Player");
   const playerClubText = slot.club || "Club";
 
+  const playerFirstNameFit = useAutoFitText(playerFirstNameRef, playerFirstNameText, { minFontSize: 11, maxFontSize: 18 });
   const playerNameLinkFit = useAutoFitText(playerNameLinkRef, playerNameText, { minFontSize: 14, maxFontSize: 31 });
   const playerNameLabelFit = useAutoFitText(playerNameLabelRef, playerNameText, { minFontSize: 14, maxFontSize: 31 });
   const playerClubFit = useAutoFitText(playerClubRef, playerClubText, { minFontSize: 11, maxFontSize: 16 });
@@ -159,6 +162,15 @@ export function SlotCard({
                     </div>
                   )}
                   <div className="slot-player-meta">
+                    {playerFirstNameText && (
+                      <span
+                        ref={playerFirstNameRef}
+                        className="autofit-text slot-player-first-name"
+                        style={playerFirstNameFit}
+                      >
+                        {playerFirstNameText}
+                      </span>
+                    )}
                     {canLinkProfile ? (
                       <a
                         ref={playerNameLinkRef}
