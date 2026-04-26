@@ -194,16 +194,19 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
 
   const footerInsideCard = await firstCard.evaluate((card) => {
     const footer = card.querySelector(".slot-footer-actions");
+    const expiring = card.querySelector('input[aria-label="Expiring"]');
     if (!footer) {
       return false;
     }
     const cardRect = card.getBoundingClientRect();
     const footerRect = footer.getBoundingClientRect();
+    const expiringRect = expiring?.getBoundingClientRect();
     return (
       footerRect.left >= cardRect.left &&
       footerRect.top >= cardRect.top &&
       footerRect.right <= cardRect.right &&
-      footerRect.bottom <= cardRect.bottom
+      footerRect.bottom <= cardRect.bottom &&
+      (!expiringRect || footerRect.top >= expiringRect.bottom)
     );
   });
   expect(footerInsideCard).toBe(true);
@@ -211,16 +214,19 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await page.setViewportSize({ width: 390, height: 780 });
   const mobileFooterInsideCard = await firstCard.evaluate((card) => {
     const footer = card.querySelector(".slot-footer-actions");
+    const expiring = card.querySelector('input[aria-label="Expiring"]');
     if (!footer) {
       return false;
     }
     const cardRect = card.getBoundingClientRect();
     const footerRect = footer.getBoundingClientRect();
+    const expiringRect = expiring?.getBoundingClientRect();
     return (
       footerRect.left >= cardRect.left &&
       footerRect.top >= cardRect.top &&
       footerRect.right <= cardRect.right &&
-      footerRect.bottom <= cardRect.bottom
+      footerRect.bottom <= cardRect.bottom &&
+      (!expiringRect || footerRect.top >= expiringRect.bottom)
     );
   });
   expect(mobileFooterInsideCard).toBe(true);
