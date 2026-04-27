@@ -764,13 +764,29 @@ main {
   text-decoration: underline;
 }
 
+.slot-player-team-row {
+  width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .slot-player-team {
   color: #6a7894;
-  width: 100%;
+  min-width: 0;
   font-size: 0.86rem;
   font-weight: 900;
   text-transform: uppercase;
   text-align: right;
+}
+
+.slot-team-logo {
+  flex: 0 0 auto;
+  width: auto;
+  height: 1em;
+  object-fit: contain;
 }
 
 .slot-fields {

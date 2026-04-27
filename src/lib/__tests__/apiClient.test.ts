@@ -44,6 +44,27 @@ describe("apiClient", () => {
     expect(calledUrl).toContain("/api/catalog/competitions?seasonId=2026&gender=male");
   });
 
+  it("fetches a team logo from the team endpoint", async () => {
+    const mockFetch = vi.fn(async () =>
+      new Response(JSON.stringify({ teamId: "team-1", teamName: "Genoa CFC", teamLogoUrl: "https://example.test/logo.png" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
+
+    const api = createApiClient("https://api.example.test", () => "token-123");
+    const result = await api.fetchTeam({ teamId: "team-1", gender: "male" });
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const calledUrl = String(mockFetch.mock.calls[0]?.[0] ?? "");
+    expect(calledUrl).toContain("/catalog/team?teamId=team-1&gender=male");
+    const init = (mockFetch.mock.calls[0]?.[1] ?? {}) as RequestInit;
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer token-123");
+    expect(result.teamLogoUrl).toBe("https://example.test/logo.png");
+  });
+
   it("adds bearer token on protected requests", async () => {
     const mockFetch = vi.fn(async () =>
       new Response(JSON.stringify({ meta: { shareToken: "", title: "", seasonId: "2026", gender: "male", updatedAt: "" }, slots: [] }), {

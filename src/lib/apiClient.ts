@@ -1,4 +1,4 @@
-import type { BoardDocument, CompetitionOption, PlayerOption, TeamOption } from "../types";
+import type { BoardDocument, CompetitionOption, PlayerOption, TeamDetail, TeamOption } from "../types";
 import { playerLabel } from "./playerTransform";
 
 export interface CompetitionsQuery {
@@ -9,6 +9,11 @@ export interface CompetitionsQuery {
 export interface TeamsQuery {
   competitionId: string;
   seasonId: string;
+}
+
+export interface TeamQuery {
+  teamId: string;
+  gender: string;
 }
 
 export interface PlayersQuery {
@@ -24,6 +29,7 @@ export interface ApiClient {
   logout(): Promise<{ ok: boolean }>;
   fetchCompetitions(query: CompetitionsQuery): Promise<CompetitionOption[]>;
   fetchTeams(query: TeamsQuery): Promise<TeamOption[]>;
+  fetchTeam(query: TeamQuery): Promise<TeamDetail>;
   fetchPlayers(query: PlayersQuery): Promise<PlayerOption[]>;
   getBoardCurrent(): Promise<BoardDocument>;
   putBoardCurrent(payload: BoardDocument): Promise<BoardDocument>;
@@ -121,6 +127,15 @@ export function createApiClient(baseUrl: string, getToken: GetToken = () => null
         headers: authHeaders(getToken)
       });
       return payload.teams ?? [];
+    },
+
+    async fetchTeam(query) {
+      const url = new URL(buildRequestUrl(baseUrl, "/catalog/team"));
+      url.searchParams.set("teamId", query.teamId);
+      url.searchParams.set("gender", query.gender);
+      return fetchJson<TeamDetail>(url.toString(), {
+        headers: authHeaders(getToken)
+      });
     },
 
     async fetchPlayers(query) {

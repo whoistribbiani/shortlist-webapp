@@ -39,6 +39,7 @@ export interface SlotPayload {
   playerId: string;
   playerInternalId: string;
   playerImageUrl: string;
+  teamLogoUrl: string;
   teamId: string;
   competitionId: string;
 }
@@ -70,12 +71,20 @@ export interface TeamOption {
   teamName: string;
 }
 
+export interface TeamDetail extends TeamOption {
+  teamLogoUrl: string;
+}
+
 export interface PlayerApiTeam {
   isMain?: boolean;
   name?: string;
   externalId?: string;
   teamId?: string;
   id?: string;
+  internalId?: string;
+  transfermarktId?: string;
+  imageUrlV2?: string;
+  imageUrl?: string;
 }
 
 export interface PlayerApiDoc {

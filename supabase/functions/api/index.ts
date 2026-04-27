@@ -18,6 +18,7 @@ interface SlotEntry {
   playerId: string;
   playerInternalId: string;
   playerImageUrl: string;
+  teamLogoUrl: string;
   teamId: string;
   competitionId: string;
 }
@@ -262,6 +263,7 @@ function normalizeSlot(input: unknown): SlotEntry | null {
     playerId: clean(raw.playerId),
     playerInternalId: clean(raw.playerInternalId),
     playerImageUrl: clean(raw.playerImageUrl),
+    teamLogoUrl: clean(raw.teamLogoUrl),
     teamId: clean(raw.teamId),
     competitionId: clean(raw.competitionId)
   };
@@ -464,6 +466,17 @@ async function fetchTeamsByCompetition(competitionId: string, seasonId: string) 
     .filter((team) => !!team.teamId || !!team.teamName);
 }
 
+async function fetchTeamById(teamId: string, gender: string) {
+  const { baseUrl } = scoutasticConfig();
+  const team = (await scoutasticGet(`/teams/${teamId}`, {
+    gender: gender === "female" ? "female" : "male"
+  })) as Record<string, unknown>;
+  const resolvedTeamId = clean(team.externalId) || clean(team.teamId) || clean(team.id) || teamId;
+  const teamName = clean(team.name) || clean(team.teamName) || resolvedTeamId;
+  const teamLogoUrl = resolveScoutasticMediaUrl(clean(team.imageUrlV2) || clean(team.imageUrl), baseUrl);
+  return { teamId: resolvedTeamId, teamName, teamLogoUrl };
+}
+
 async function fetchPlayersByTeam(teamId: string, seasonId: string) {
   const { baseUrl } = scoutasticConfig();
   const payload = (await scoutasticGet(`/teams/${teamId}/players/${seasonId}`, {
@@ -544,7 +557,7 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
   const slotsResponse = await supabase
     .from("board_slots")
     .select(
-      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, player_id, player_internal_id, player_image_url, team_id, competition_id"
+      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, player_id, player_internal_id, player_image_url, team_logo_url, team_id, competition_id"
     )
     .eq("board_id", board.id);
 
@@ -566,6 +579,7 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
     playerId: clean(row.player_id),
     playerInternalId: clean(row.player_internal_id),
     playerImageUrl: clean(row.player_image_url),
+    teamLogoUrl: clean(row.team_logo_url),
     teamId: clean(row.team_id),
     competitionId: clean(row.competition_id)
   }));
@@ -639,6 +653,7 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
       player_id: slot.playerId,
       player_internal_id: slot.playerInternalId,
       player_image_url: slot.playerImageUrl,
+      team_logo_url: slot.teamLogoUrl,
       team_id: slot.teamId,
       competition_id: slot.competitionId
     }));
@@ -887,6 +902,17 @@ Deno.serve(async (request) => {
       }
       const teams = await fetchTeamsByCompetition(competitionId, seasonId);
       return jsonResponse({ teams });
+    }
+
+    if (segments[0] === "catalog" && segments[1] === "team" && method === "GET") {
+      const url = new URL(request.url);
+      const teamId = clean(url.searchParams.get("teamId"));
+      const gender = clean(url.searchParams.get("gender")) || "male";
+      if (!teamId) {
+        return jsonResponse({ error: "teamId is required" }, 400);
+      }
+      const team = await fetchTeamById(teamId, gender);
+      return jsonResponse(team);
     }
 
     if (segments[0] === "catalog" && segments[1] === "players" && method === "GET") {

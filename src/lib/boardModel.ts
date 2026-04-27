@@ -14,7 +14,8 @@ function slotIsEmpty(slot: SlotEntry): boolean {
     !slot.expiring &&
     !slot.videoUrl &&
     !slot.playerInternalId &&
-    !slot.playerImageUrl
+    !slot.playerImageUrl &&
+    !slot.teamLogoUrl
   );
 }
 
@@ -103,6 +104,7 @@ export function moveSlotPayload(state: BoardState, fromSlotKey: string, toSlotKe
     playerId: source.playerId,
     playerInternalId: source.playerInternalId,
     playerImageUrl: source.playerImageUrl,
+    teamLogoUrl: source.teamLogoUrl,
     teamId: source.teamId,
     competitionId: source.competitionId
   };

@@ -57,6 +57,7 @@ export function SlotCard({
 
   const canLinkProfile = !!slot.playerInternalId;
   const [imgError, setImgError] = useState(false);
+  const [teamLogoError, setTeamLogoError] = useState(false);
   const [isVideoPopoverOpen, setIsVideoPopoverOpen] = useState(false);
   const [videoDraft, setVideoDraft] = useState(slot.videoUrl);
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -72,6 +73,10 @@ export function SlotCard({
   const proxyImageUrl = useMemo(
     () => buildPlayerImageProxyUrl(apiBaseUrl, slot.playerImageUrl),
     [apiBaseUrl, slot.playerImageUrl]
+  );
+  const proxyTeamLogoUrl = useMemo(
+    () => buildPlayerImageProxyUrl(apiBaseUrl, slot.teamLogoUrl),
+    [apiBaseUrl, slot.teamLogoUrl]
   );
   const hasValidVideoUrl = isValidVideoUrl(slot.videoUrl);
   const playerFirstNameText = slot.name.trim();
@@ -95,6 +100,10 @@ export function SlotCard({
   useEffect(() => {
     setImgError(false);
   }, [slot.playerImageUrl]);
+
+  useEffect(() => {
+    setTeamLogoError(false);
+  }, [slot.teamLogoUrl]);
 
   useEffect(() => {
     setVideoDraft(slot.videoUrl);
@@ -187,8 +196,20 @@ export function SlotCard({
                         {playerNameText}
                       </span>
                     )}
-                    <span ref={playerClubRef} className="autofit-text slot-player-team" style={playerClubFit}>
-                      {playerClubText}
+                    <span className="slot-player-team-row">
+                      <span ref={playerClubRef} className="autofit-text slot-player-team" style={playerClubFit}>
+                        {playerClubText}
+                      </span>
+                      {proxyTeamLogoUrl && !teamLogoError && (
+                        <img
+                          className="slot-team-logo"
+                          src={proxyTeamLogoUrl}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          onError={() => setTeamLogoError(true)}
+                        />
+                      )}
                     </span>
                   </div>
                 </div>

@@ -58,6 +58,7 @@ export const EMPTY_SLOT_PAYLOAD: SlotPayload = {
   playerId: "",
   playerInternalId: "",
   playerImageUrl: "",
+  teamLogoUrl: "",
   teamId: "",
   competitionId: ""
 };

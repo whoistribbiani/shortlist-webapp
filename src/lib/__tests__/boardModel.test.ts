@@ -75,6 +75,7 @@ describe("boardModel", () => {
       playerId: "p-11",
       playerInternalId: "internal-11",
       playerImageUrl: "https://example.test/player.png",
+      teamLogoUrl: "https://example.test/team.png",
       player: "MOVER",
       club: "Genoa",
       videoUrl: "https://onedrive.live.com/video"
@@ -87,6 +88,7 @@ describe("boardModel", () => {
     expect(moved[targetKey].club).toBe("Genoa");
     expect(moved[targetKey].playerInternalId).toBe("internal-11");
     expect(moved[targetKey].playerImageUrl).toBe("https://example.test/player.png");
+    expect(moved[targetKey].teamLogoUrl).toBe("https://example.test/team.png");
     expect(moved[targetKey].videoUrl).toBe("https://onedrive.live.com/video");
   });
 
@@ -105,6 +107,7 @@ describe("boardModel", () => {
       playerId: "player-1",
       playerInternalId: "internal-1",
       playerImageUrl: "https://example.test/player.png",
+      teamLogoUrl: "https://example.test/team.png",
       videoUrl: "https://video.test/id"
     });
     const cleared = clearSlotPayload(withPlayer, slotKey);
@@ -115,6 +118,7 @@ describe("boardModel", () => {
     expect(cleared[slotKey].playerId).toBe("");
     expect(cleared[slotKey].playerInternalId).toBe("");
     expect(cleared[slotKey].playerImageUrl).toBe("");
+    expect(cleared[slotKey].teamLogoUrl).toBe("");
     expect(cleared[slotKey].videoUrl).toBe("");
   });
 

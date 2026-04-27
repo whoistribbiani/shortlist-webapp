@@ -28,6 +28,7 @@ describe("playerTransform", () => {
       playerId: "123",
       playerInternalId: "internal-123",
       playerImageUrl: "https://genoacfc.scoutastic.com/images/player.png",
+      teamLogoUrl: "",
       competitionId: "comp-77",
       name: "Antoine",
       player: "Beydts",
@@ -51,6 +52,7 @@ describe("playerTransform", () => {
     expect(slot.player).toBe("Single Name");
     expect(slot.playerInternalId).toBe("");
     expect(slot.playerImageUrl).toBe("");
+    expect(slot.teamLogoUrl).toBe("");
     expect(slot.name).toBe("");
     expect(slot.club).toBe("");
     expect(slot.age).toBe("");

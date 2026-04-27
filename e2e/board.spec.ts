@@ -14,6 +14,7 @@ const emptyBoardResponse = {
 test("selects a player with autocomplete flow and enriches the slot", async ({ page }) => {
   let hasImageProxyRequest = false;
   let hasAuthorizedApiCall = false;
+  let hasTeamLogoRequest = false;
   page.on("dialog", (dialog) => dialog.accept());
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -83,6 +84,18 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
               teams: [{ isMain: true, name: "VITORIA GUIMARAES SPORTING CLUB MOLTO LUNGO", externalId: "team-1" }]
             }
           ]
+        })
+      });
+    }
+    if (route.request().method() === "GET" && path.includes("/catalog/team")) {
+      hasTeamLogoRequest = true;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          teamId: "team-1",
+          teamName: "Genoa CFC",
+          teamLogoUrl: "https://example.test/team-logo.png"
         })
       });
     }
@@ -157,8 +170,10 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     "https://genoacfc.scoutastic.com/#/player/internal-1"
   );
   await expect(firstCard.locator(".slot-player-first-name")).toHaveText("Antoine");
+  await expect(firstCard.locator(".slot-team-logo")).toHaveAttribute("src", /\/api\/catalog\/player-image\?src=/);
   expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
+  expect(hasTeamLogoRequest).toBe(true);
 
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
   await firstCard.getByTestId("video-edit").click();

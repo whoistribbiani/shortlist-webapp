@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { CompetitionsQuery } from "../lib/apiClient";
-import type { PlayerOption, SlotPayload, TeamOption } from "../types";
+import type { PlayerOption, SlotPayload, TeamDetail, TeamOption } from "../types";
 
 interface PlayerPickerApi {
   fetchCompetitions(query: CompetitionsQuery): Promise<Array<{ id: string; name: string; area: string; season: string }>>;
   fetchTeams(query: { competitionId: string; seasonId: string }): Promise<TeamOption[]>;
+  fetchTeam(query: { teamId: string; gender: string }): Promise<TeamDetail>;
   fetchPlayers(query: { teamId: string; seasonId: string }): Promise<PlayerOption[]>;
 }
 
@@ -207,6 +208,25 @@ export function PlayerPicker({
 
   const selectedPlayer = useMemo(() => players.find((item) => playerKey(item) === playerId), [players, playerId]);
 
+  async function applySelectedPlayer(): Promise<void> {
+    if (!selectedPlayer) {
+      return;
+    }
+    setLoading(true);
+    const payload = toAutofill(selectedPlayer, competitionId);
+    try {
+      if (payload.teamId) {
+        const team = await api.fetchTeam({ teamId: payload.teamId, gender });
+        payload.teamLogoUrl = team.teamLogoUrl ?? "";
+      }
+    } catch {
+      payload.teamLogoUrl = "";
+    } finally {
+      setLoading(false);
+    }
+    onApply(payload);
+  }
+
   if (!open) {
     return null;
   }
@@ -331,12 +351,9 @@ export function PlayerPicker({
           <button
             type="button"
             className="primary"
-            disabled={!selectedPlayer || !competitionId}
+            disabled={!selectedPlayer || !competitionId || loading}
             onClick={() => {
-              if (!selectedPlayer) {
-                return;
-              }
-              onApply(toAutofill(selectedPlayer, competitionId));
+              void applySelectedPlayer();
             }}
           >
             Applica
