@@ -378,6 +378,20 @@ main {
   box-shadow: var(--soft-shadow);
 }
 
+.export-btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.export-btn--pdf {
+  background: #ae1919;
+}
+
+.export-btn--pdf:hover:not(:disabled) {
+  background: #8f1414;
+}
+
 .export-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

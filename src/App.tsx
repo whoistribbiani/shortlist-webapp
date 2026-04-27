@@ -21,6 +21,7 @@ import {
   upsertSlotPayload,
   type BoardState
 } from "./lib/boardModel";
+import { groupBoardForPdf } from "./lib/pdfGrouping";
 import { resolveSeasonIdFromEnv } from "./lib/season";
 import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
@@ -231,6 +232,18 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
     downloadBlob(blob, `shortlist-board.xlsx`);
   }
 
+  async function onExportPdf(): Promise<void> {
+    const [{ pdf }, { ShortlistPdfDocument }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("./components/pdf/ShortlistPdfDocument"),
+    ]);
+    const grouped = groupBoardForPdf(state);
+    const blob = await pdf(
+      <ShortlistPdfDocument meta={meta} grouped={grouped} />
+    ).toBlob();
+    downloadBlob(blob, `shortlist-${meta.title || "board"}.pdf`);
+  }
+
   const shareLink = useMemo(() => {
     const url = new URL(window.location.href);
     url.search = "";
@@ -251,7 +264,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
     >
       <div className="top-toolbar">
         <PositionTabs value={tab} onChange={setTab} />
-        <ExportButton onExport={onExport} />
+        <ExportButton onExport={onExport} onExportPdf={onExportPdf} />
       </div>
 
       <ShareLinkBar shareLink={shareLink} />
