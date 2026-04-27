@@ -44,6 +44,33 @@ describe("apiClient", () => {
     expect(calledUrl).toContain("/api/catalog/competitions?seasonId=2026&gender=male");
   });
 
+  it("keeps team logo urls from the teams endpoint", async () => {
+    const mockFetch = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          teams: [{ teamId: "team-1", teamName: "Genoa CFC", teamLogoUrl: "https://example.test/team.png" }]
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      )
+    );
+    globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
+
+    const api = createApiClient("https://api.example.test", () => "token-123");
+    const result = await api.fetchTeams({ competitionId: "IT1", seasonId: "2026" });
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const calledUrl = String(mockFetch.mock.calls[0]?.[0] ?? "");
+    expect(calledUrl).toContain("/catalog/teams?competitionId=IT1&seasonId=2026");
+    expect(result[0]).toMatchObject({
+      teamId: "team-1",
+      teamName: "Genoa CFC",
+      teamLogoUrl: "https://example.test/team.png"
+    });
+  });
+
   it("fetches a team logo from the team endpoint", async () => {
     const mockFetch = vi.fn(async () =>
       new Response(JSON.stringify({ teamId: "team-1", teamName: "Genoa CFC", teamLogoUrl: "https://example.test/logo.png" }), {

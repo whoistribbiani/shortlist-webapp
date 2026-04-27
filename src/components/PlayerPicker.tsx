@@ -208,6 +208,7 @@ export function PlayerPicker({
   );
 
   const selectedPlayer = useMemo(() => players.find((item) => playerKey(item) === playerId), [players, playerId]);
+  const selectedTeam = useMemo(() => teams.find((item) => item.teamId === teamId), [teamId, teams]);
 
   async function applySelectedPlayer(): Promise<void> {
     if (!selectedPlayer) {
@@ -216,14 +217,17 @@ export function PlayerPicker({
     setLoading(true);
     const payload = toAutofill(selectedPlayer, competitionId);
     const effectiveTeamId = payload.teamId || teamId;
+    if (selectedTeam?.teamLogoUrl) {
+      payload.teamLogoUrl = resolveScoutasticMediaUrl(selectedTeam.teamLogoUrl);
+    }
+    if (!payload.teamId && effectiveTeamId) {
+      payload.teamId = effectiveTeamId;
+    }
     try {
-      if (effectiveTeamId) {
+      if (effectiveTeamId && !payload.teamLogoUrl) {
         const team = await api.fetchTeam({ teamId: effectiveTeamId, gender });
         if (team.teamLogoUrl) {
           payload.teamLogoUrl = resolveScoutasticMediaUrl(team.teamLogoUrl);
-        }
-        if (!payload.teamId) {
-          payload.teamId = effectiveTeamId;
         }
       }
     } catch {

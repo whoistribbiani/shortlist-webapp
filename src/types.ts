@@ -69,6 +69,7 @@ export interface CompetitionOption {
 export interface TeamOption {
   teamId: string;
   teamName: string;
+  teamLogoUrl: string;
 }
 
 export interface TeamDetail extends TeamOption {

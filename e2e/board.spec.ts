@@ -15,6 +15,8 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   let hasImageProxyRequest = false;
   let hasAuthorizedApiCall = false;
   let hasTeamLogoRequest = false;
+  let hasPlayerImageProxyRequest = false;
+  let hasTeamLogoProxyRequest = false;
   page.on("dialog", (dialog) => dialog.accept());
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -63,7 +65,13 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          teams: [{ teamId: "team-1", teamName: "Genoa CFC" }]
+          teams: [
+            {
+              teamId: "team-1",
+              teamName: "Genoa CFC",
+              teamLogoUrl: "/api/v1/images/team/3376.png"
+            }
+          ]
         })
       });
     }
@@ -78,7 +86,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
               internalId: "internal-1",
               firstName: "Antoine",
               lastName: "Savio Camarda Lunghissimo Profilo",
-              playerImageUrl: "https://example.test/antoine.png",
+              playerImageUrl: "/api/v1/images/player/698415-1720429585.jpg",
               dateOfBirth: "2008-01-01T00:00:00.000Z",
               contractExpires: "2026-06-30T00:00:00.000Z",
               teams: [{ isMain: true, name: "VITORIA GUIMARAES SPORTING CLUB MOLTO LUNGO", externalId: "team-1" }]
@@ -90,17 +98,20 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     if (route.request().method() === "GET" && path.includes("/catalog/team")) {
       hasTeamLogoRequest = true;
       return route.fulfill({
-        status: 200,
+        status: 500,
         contentType: "application/json",
-        body: JSON.stringify({
-          teamId: "team-1",
-          teamName: "Genoa CFC",
-          teamLogoUrl: "https://example.test/team-logo.png"
-        })
+        body: JSON.stringify({ error: "team detail fallback should not be needed" })
       });
     }
     if (route.request().method() === "GET" && path.includes("/catalog/player-image")) {
       hasImageProxyRequest = true;
+      const source = url.searchParams.get("src") ?? "";
+      if (source.includes("/player/")) {
+        hasPlayerImageProxyRequest = true;
+      }
+      if (source.includes("/team/")) {
+        hasTeamLogoProxyRequest = true;
+      }
       const onePixelPng = Buffer.from(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N7V8AAAAASUVORK5CYII=",
         "base64"
@@ -173,7 +184,9 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(firstCard.locator(".slot-team-logo")).toHaveAttribute("src", /\/api\/catalog\/player-image\?src=/);
   expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
-  expect(hasTeamLogoRequest).toBe(true);
+  expect(hasPlayerImageProxyRequest).toBe(true);
+  expect(hasTeamLogoProxyRequest).toBe(true);
+  expect(hasTeamLogoRequest).toBe(false);
 
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
   await firstCard.getByTestId("video-edit").click();

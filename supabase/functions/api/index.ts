@@ -452,6 +452,7 @@ async function fetchCompetitionsCatalog(seasonId: string, gender: string) {
 }
 
 async function fetchTeamsByCompetition(competitionId: string, seasonId: string) {
+  const { baseUrl } = scoutasticConfig();
   const payload = (await scoutasticGet(`/competitions/${competitionId}/teams/${seasonId}`, {})) as Record<
     string,
     unknown
@@ -461,7 +462,8 @@ async function fetchTeamsByCompetition(competitionId: string, seasonId: string) 
     .map((team) => {
       const teamId = clean(team.externalId) || clean(team.teamId) || clean(team.id);
       const teamName = clean(team.name) || clean(team.teamName) || teamId;
-      return { teamId, teamName };
+      const teamLogoUrl = resolveScoutasticMediaUrl(clean(team.imageUrlV2) || clean(team.imageUrl), baseUrl);
+      return { teamId, teamName, teamLogoUrl };
     })
     .filter((team) => !!team.teamId || !!team.teamName);
 }
