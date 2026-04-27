@@ -38,6 +38,16 @@ export function buildPlayerImageProxyUrl(apiBaseUrl: string, sourceUrl: string):
   if (!source) {
     return "";
   }
+  // Non-Scoutastic URLs (e.g. Transfermarkt CDN) are public — no proxy needed.
+  // The proxy only handles Scoutastic URLs that require Bearer auth.
+  try {
+    const hostname = new URL(source).hostname.toLowerCase();
+    if (hostname !== "scoutastic.com" && !hostname.endsWith(".scoutastic.com")) {
+      return source;
+    }
+  } catch {
+    // relative path — fall through to proxy
+  }
   const endpoint = new URL(toAbsoluteUrl(joinPath(apiBaseUrl, "/catalog/player-image")));
   endpoint.searchParams.set("src", source);
   return endpoint.toString();
