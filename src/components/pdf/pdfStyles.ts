@@ -144,14 +144,14 @@ export const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 6,
+    padding: 8,
     flexDirection: "column",
   },
   cardTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   cardLogo: {
     width: 18,
@@ -169,15 +169,15 @@ export const styles = StyleSheet.create({
   },
   cardName: {
     color: COLORS.primary,
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: 700,
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  cardMeta: {
+  cardMetaRow: {
     color: COLORS.neutral,
     fontSize: 8,
     fontWeight: 400,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   cardVideoLink: {
     color: COLORS.accent,

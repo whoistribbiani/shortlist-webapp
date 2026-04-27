@@ -27,7 +27,6 @@ export function PdfPlayerCard({ slot, imageProxyBaseUrl }: Props): JSX.Element {
   const photoSrc = proxyUrl(imageProxyBaseUrl, slot.playerImageUrl);
   const logoSrc = proxyUrl(imageProxyBaseUrl, slot.teamLogoUrl);
   const displayName = slot.player || slot.name;
-  const metaParts = [slot.club, slot.age, slot.expiring].filter(Boolean);
 
   return (
     <View style={styles.card}>
@@ -51,9 +50,9 @@ export function PdfPlayerCard({ slot, imageProxyBaseUrl }: Props): JSX.Element {
 
         <Text style={styles.cardName}>{displayName}</Text>
 
-        {metaParts.length > 0 ? (
-          <Text style={styles.cardMeta}>{metaParts.join(" · ")}</Text>
-        ) : null}
+        {slot.club ? <Text style={styles.cardMetaRow}>{slot.club}</Text> : null}
+        {slot.age ? <Text style={styles.cardMetaRow}>{slot.age}</Text> : null}
+        {slot.expiring ? <Text style={styles.cardMetaRow}>{slot.expiring}</Text> : null}
 
         {slot.videoUrl ? (
           <Link src={slot.videoUrl} style={styles.cardVideoLink}>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { CompetitionsQuery } from "../lib/apiClient";
+import { resolveScoutasticMediaUrl } from "../lib/scoutasticMedia";
 import type { PlayerOption, SlotPayload, TeamDetail, TeamOption } from "../types";
 
 interface PlayerPickerApi {
@@ -219,7 +220,7 @@ export function PlayerPicker({
       if (effectiveTeamId) {
         const team = await api.fetchTeam({ teamId: effectiveTeamId, gender });
         if (team.teamLogoUrl) {
-          payload.teamLogoUrl = team.teamLogoUrl;
+          payload.teamLogoUrl = resolveScoutasticMediaUrl(team.teamLogoUrl);
         }
         if (!payload.teamId) {
           payload.teamId = effectiveTeamId;
