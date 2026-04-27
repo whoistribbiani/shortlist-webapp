@@ -214,13 +214,19 @@ export function PlayerPicker({
     }
     setLoading(true);
     const payload = toAutofill(selectedPlayer, competitionId);
+    const effectiveTeamId = payload.teamId || teamId;
     try {
-      if (payload.teamId) {
-        const team = await api.fetchTeam({ teamId: payload.teamId, gender });
-        payload.teamLogoUrl = team.teamLogoUrl ?? "";
+      if (effectiveTeamId) {
+        const team = await api.fetchTeam({ teamId: effectiveTeamId, gender });
+        if (team.teamLogoUrl) {
+          payload.teamLogoUrl = team.teamLogoUrl;
+        }
+        if (!payload.teamId) {
+          payload.teamId = effectiveTeamId;
+        }
       }
     } catch {
-      payload.teamLogoUrl = "";
+      // keep whatever teamLogoUrl toAutofill already set
     } finally {
       setLoading(false);
     }
