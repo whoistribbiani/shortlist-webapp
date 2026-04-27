@@ -34,6 +34,12 @@ function resolvePlayerImageUrl(player: PlayerApiDoc): string {
   return resolveScoutasticMediaUrl(raw);
 }
 
+function resolveTeamLogoUrl(team: PlayerApiTeam | undefined): string {
+  if (!team) return "";
+  const raw = clean(team.imageUrlV2) || clean(team.imageUrl);
+  return resolveScoutasticMediaUrl(raw);
+}
+
 export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: string): SlotPayload {
   const firstName = clean(player.firstName);
   const lastName = clean(player.lastName);
@@ -57,6 +63,7 @@ export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: str
     playerId,
     playerInternalId,
     playerImageUrl: resolvePlayerImageUrl(player),
+    teamLogoUrl: resolveTeamLogoUrl(mainTeam),
     teamId,
     competitionId: competitionId.trim()
   };
