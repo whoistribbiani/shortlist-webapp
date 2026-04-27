@@ -6,9 +6,10 @@ import { styles } from "./pdfStyles";
 
 interface Props {
   group: PdfGrouped[number];
+  imageProxyBaseUrl?: string;
 }
 
-export function PdfPositionSection({ group }: Props): JSX.Element {
+export function PdfPositionSection({ group, imageProxyBaseUrl }: Props): JSX.Element {
   return (
     <View>
       <View style={styles.sectionHeader}>
@@ -30,6 +31,7 @@ export function PdfPositionSection({ group }: Props): JSX.Element {
                     <PdfPlayerCard
                       key={`${slot.positionId}|${slot.rank}|${slot.scenario}|${slot.lane}`}
                       slot={slot}
+                      imageProxyBaseUrl={imageProxyBaseUrl}
                     />
                   ))}
                 </View>

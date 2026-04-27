@@ -10,9 +10,10 @@ import { styles } from "./pdfStyles";
 interface Props {
   meta: BoardMeta;
   grouped: PdfGrouped;
+  imageProxyBaseUrl?: string;
 }
 
-export function ShortlistPdfDocument({ meta, grouped }: Props): JSX.Element {
+export function ShortlistPdfDocument({ meta, grouped, imageProxyBaseUrl }: Props): JSX.Element {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
@@ -33,7 +34,7 @@ export function ShortlistPdfDocument({ meta, grouped }: Props): JSX.Element {
             orientation="landscape"
             style={styles.page}
           >
-            <PdfPositionSection group={group} />
+            <PdfPositionSection group={group} imageProxyBaseUrl={imageProxyBaseUrl} />
           </Page>
         ))
       )}

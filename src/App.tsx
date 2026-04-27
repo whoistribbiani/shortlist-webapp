@@ -239,7 +239,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
     ]);
     const grouped = groupBoardForPdf(state);
     const blob = await pdf(
-      <ShortlistPdfDocument meta={meta} grouped={grouped} />
+      <ShortlistPdfDocument meta={meta} grouped={grouped} imageProxyBaseUrl={apiBaseUrl} />
     ).toBlob();
     downloadBlob(blob, `shortlist-${meta.title || "board"}.pdf`);
   }

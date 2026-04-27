@@ -81,7 +81,6 @@ export const styles = StyleSheet.create({
   },
   sectionBody: {
     padding: 16,
-    flex: 1,
   },
 
   // Lane header
@@ -111,7 +110,6 @@ export const styles = StyleSheet.create({
   cardRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
     marginBottom: 4,
   },
 
@@ -124,16 +122,25 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: "hidden",
     backgroundColor: COLORS.white,
+    marginRight: 8,
+    marginBottom: 8,
   },
   cardImageContainer: {
     width: 60,
     height: 70,
     backgroundColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
   },
   cardImage: {
     width: 60,
     height: 70,
     objectFit: "cover",
+  },
+  cardInitials: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: 700,
   },
   cardContent: {
     flex: 1,
