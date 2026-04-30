@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { CompetitionsQuery } from "../lib/apiClient";
+import { rankAutocompleteOptions } from "../lib/autocompleteSearch";
 import { resolveScoutasticMediaUrl } from "../lib/scoutasticMedia";
 import type { PlayerOption, SlotPayload, TeamDetail, TeamOption } from "../types";
 
@@ -189,11 +190,12 @@ export function PlayerPicker({
 
   const competitionSuggestions = useMemo(
     () =>
-      competitions
-        .filter((competition) =>
-          includesQuery(`${competition.name} ${competition.area} ${competition.season}`, competitionQuery)
-        )
-        .slice(0, 8),
+      rankAutocompleteOptions(
+        competitions,
+        competitionQuery,
+        (competition) => `${competition.name} ${competition.area} ${competition.season}`,
+        20
+      ),
     [competitionQuery, competitions]
   );
 

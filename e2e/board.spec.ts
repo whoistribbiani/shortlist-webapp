@@ -56,7 +56,15 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          competitions: [{ id: "IT1", name: "Serie A", area: "Italy", season: "2026" }]
+          competitions: [
+            ...Array.from({ length: 19 }, (_, index) => ({
+              id: `COMP-${index + 1}`,
+              name: `Competition ${index + 1}`,
+              area: "Europe",
+              season: "2026"
+            })),
+            { id: "IT1", name: "Serie A", area: "Italy", season: "2026" }
+          ]
         })
       });
     }
@@ -157,7 +165,12 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
 
   await page.getByTestId("slot-select").first().click();
 
-  await page.getByLabel("Competizione").fill("serie");
+  await page.getByLabel("Competizione").fill("competition");
+  await expect(
+    page.locator("[data-testid='competition-suggestions']").getByRole("button", { name: /Competition 19/ })
+  ).toBeVisible();
+
+  await page.getByLabel("Competizione").fill("seriea");
   await page.locator("[data-testid='competition-suggestions']").getByRole("button", { name: /Serie A/ }).click();
 
   await page.getByLabel("Squadra").fill("genoa");
