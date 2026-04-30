@@ -27,6 +27,21 @@ import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
 import type { BoardDocument, BoardMeta, PositionId, SlotEntry, SlotPayload } from "./types";
 
+type BoardZoom = "small" | "default" | "large";
+
+const BOARD_ZOOM_LEVELS: BoardZoom[] = ["small", "default", "large"];
+
+function zoomLabel(zoom: BoardZoom): string {
+  switch (zoom) {
+    case "small":
+      return "75%";
+    case "large":
+      return "125%";
+    default:
+      return "100%";
+  }
+}
+
 interface AppProps {
   apiBaseUrl: string;
   api: ApiClient;
@@ -110,6 +125,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [bannerMessage, setBannerMessage] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState("");
+  const [boardZoom, setBoardZoom] = useState<BoardZoom>("default");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -252,6 +268,12 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
   }, []);
 
   const saveDisplayTime = useMemo(() => formatSaveTime(lastSavedAt || meta.updatedAt), [lastSavedAt, meta.updatedAt]);
+  const boardZoomIndex = BOARD_ZOOM_LEVELS.indexOf(boardZoom);
+
+  function adjustBoardZoom(direction: -1 | 1): void {
+    const nextIndex = Math.min(BOARD_ZOOM_LEVELS.length - 1, Math.max(0, boardZoomIndex + direction));
+    setBoardZoom(BOARD_ZOOM_LEVELS[nextIndex]);
+  }
 
   return (
     <BoardShell
@@ -264,6 +286,36 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
     >
       <div className="top-toolbar">
         <PositionTabs value={tab} onChange={setTab} />
+        <div className="board-zoom-control" aria-label="Zoom board">
+          <button
+            type="button"
+            data-testid="zoom-out"
+            aria-label="Riduci zoom board"
+            disabled={boardZoomIndex === 0}
+            onClick={() => adjustBoardZoom(-1)}
+          >
+            -
+          </button>
+          <button
+            type="button"
+            className="board-zoom-value"
+            data-testid="zoom-reset"
+            aria-label="Reset zoom board"
+            disabled={boardZoom === "default"}
+            onClick={() => setBoardZoom("default")}
+          >
+            {zoomLabel(boardZoom)}
+          </button>
+          <button
+            type="button"
+            data-testid="zoom-in"
+            aria-label="Aumenta zoom board"
+            disabled={boardZoomIndex === BOARD_ZOOM_LEVELS.length - 1}
+            onClick={() => adjustBoardZoom(1)}
+          >
+            +
+          </button>
+        </div>
         <ExportButton onExport={onExport} onExportPdf={onExportPdf} />
       </div>
 
@@ -283,6 +335,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
             <ScenarioGrid
               apiBaseUrl={apiBaseUrl}
               positionId={tab}
+              zoom={boardZoom}
               state={state}
               duplicateSlotKeys={duplicateSlotKeys}
               onPatchSlot={(slotKey, patch) => patchSlot(slotKey, patch)}

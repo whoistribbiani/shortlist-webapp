@@ -8,6 +8,7 @@ import { SlotCard } from "./SlotCard";
 interface ScenarioGridProps {
   apiBaseUrl: string;
   positionId: PositionId;
+  zoom: "small" | "default" | "large";
   state: BoardState;
   duplicateSlotKeys: Set<string>;
   onPatchSlot: (slotKey: string, patch: Partial<SlotEntry>) => void;
@@ -18,6 +19,7 @@ interface ScenarioGridProps {
 export function ScenarioGrid({
   apiBaseUrl,
   positionId,
+  zoom,
   state,
   duplicateSlotKeys,
   onPatchSlot,
@@ -25,7 +27,7 @@ export function ScenarioGrid({
   onOpenPicker
 }: ScenarioGridProps): JSX.Element {
   return (
-    <section className="scenario-board">
+    <section className="scenario-board" data-testid="scenario-board" data-zoom={zoom}>
       <div className="scenario-board-scroll">
         <div className="scenario-layout-grid">
           <aside className="rank-column-card">

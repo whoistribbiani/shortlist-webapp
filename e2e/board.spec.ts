@@ -188,6 +188,22 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await page.getByTestId("copy-link-btn").click();
   await expect(page.getByTestId("copy-link-btn")).toHaveText("Copiato");
 
+  const board = page.getByTestId("scenario-board");
+  await expect(board).toHaveAttribute("data-zoom", "default");
+  const defaultSlotWidth = await page.locator(".slot-card").first().evaluate((element) => element.getBoundingClientRect().width);
+  await page.getByTestId("zoom-out").click();
+  await expect(board).toHaveAttribute("data-zoom", "small");
+  const smallSlotWidth = await page.locator(".slot-card").first().evaluate((element) => element.getBoundingClientRect().width);
+  expect(smallSlotWidth).toBeLessThan(defaultSlotWidth);
+  await page.getByTestId("zoom-reset").click();
+  await expect(board).toHaveAttribute("data-zoom", "default");
+  await page.getByTestId("zoom-in").click();
+  await expect(board).toHaveAttribute("data-zoom", "large");
+  const largeSlotWidth = await page.locator(".slot-card").first().evaluate((element) => element.getBoundingClientRect().width);
+  expect(largeSlotWidth).toBeGreaterThan(defaultSlotWidth);
+  await page.getByTestId("zoom-reset").click();
+  await expect(board).toHaveAttribute("data-zoom", "default");
+
   await page.getByTestId("slot-select").first().click();
 
   await page.getByLabel("Competizione").fill("competition");

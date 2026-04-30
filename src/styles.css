@@ -366,6 +366,45 @@ main {
   margin-left: 4px;
 }
 
+.board-zoom-control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+  background: #f8fafd;
+  overflow: hidden;
+}
+
+.board-zoom-control button {
+  width: 38px;
+  height: 36px;
+  border: 0;
+  border-right: 1px solid var(--line-strong);
+  background: transparent;
+  color: #253b61;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.board-zoom-control button:last-child {
+  border-right: 0;
+}
+
+.board-zoom-control button:hover:not(:disabled) {
+  background: #eef4ff;
+}
+
+.board-zoom-control button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.board-zoom-control .board-zoom-value {
+  width: 58px;
+  font-size: 0.82rem;
+}
+
 .export-btn {
   border: 0;
   border-radius: var(--radius-xs);
@@ -489,6 +528,14 @@ main {
   gap: var(--space-8);
   min-width: calc(48px + (var(--scenario-column-width) * 4) + (var(--space-8) * 4) + (var(--space-8) * 2));
   padding: var(--space-8);
+}
+
+.scenario-board[data-zoom="small"] .scenario-layout-grid {
+  --slot-size: 280px;
+}
+
+.scenario-board[data-zoom="large"] .scenario-layout-grid {
+  --slot-size: 430px;
 }
 
 .rank-column-card {
