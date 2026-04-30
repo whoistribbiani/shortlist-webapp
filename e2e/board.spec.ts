@@ -103,6 +103,31 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
         })
       });
     }
+    if (route.request().method() === "GET" && path.includes("/catalog/player-by-transfermarkt")) {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          player: {
+            transfermarktId: "698415",
+            internalId: "internal-tm-1",
+            firstName: "Direct",
+            lastName: "Lookup",
+            playerImageUrl: "/api/v1/images/player/direct.jpg",
+            dateOfBirth: "2007-05-06T00:00:00.000Z",
+            contractExpires: "2028-06-30T00:00:00.000Z",
+            teams: [
+              {
+                isMain: true,
+                name: "Direct FC",
+                externalId: "team-direct",
+                imageUrlV2: "/api/v1/images/team/direct.png"
+              }
+            ]
+          }
+        })
+      });
+    }
     if (route.request().method() === "GET" && path.includes("/catalog/team")) {
       hasTeamLogoRequest = true;
       return route.fulfill({
@@ -287,4 +312,16 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(firstCard).toHaveAttribute("data-state", "empty");
   await expect(firstCard.locator('input[aria-label="Player"]')).toHaveCount(0);
   await expect(firstCard.locator('input[aria-label="Name"]')).toHaveCount(0);
+
+  await page.getByTestId("slot-select").first().click();
+  await page.getByLabel("Transfermarkt ID").fill("698415");
+  await page.getByRole("button", { name: "Aggiungi da ID" }).click();
+
+  await expect(firstCard).toHaveAttribute("data-state", "filled");
+  await expect(firstCard.locator(".slot-player-first-name")).toHaveText("Direct");
+  await expect(firstCard.locator(".slot-player-link")).toHaveAttribute(
+    "href",
+    "https://genoacfc.scoutastic.com/#/player/internal-tm-1"
+  );
+  await expect(firstCard.locator(".slot-player-team")).toHaveText("Direct FC");
 });

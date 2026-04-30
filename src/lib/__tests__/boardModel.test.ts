@@ -92,6 +92,66 @@ describe("boardModel", () => {
     expect(moved[targetKey].videoUrl).toBe("https://onedrive.live.com/video");
   });
 
+  it("swaps payloads when moving onto a populated slot", () => {
+    const state = createInitialBoardState();
+    const sourceKey = buildSlotKey({
+      positionId: "11-ST",
+      rank: 2,
+      scenario: "0-2",
+      lane: "A1B1"
+    });
+    const targetKey = buildSlotKey({
+      positionId: "11-ST",
+      rank: 1,
+      scenario: "0-2",
+      lane: "A1B1"
+    });
+
+    const withPlayers = upsertSlotPayload(
+      upsertSlotPayload(state, sourceKey, {
+        playerId: "p-2",
+        playerInternalId: "internal-2",
+        playerImageUrl: "https://example.test/player-2.png",
+        teamLogoUrl: "https://example.test/team-2.png",
+        player: "PLAYER TWO",
+        club: "Club Two",
+        videoUrl: "https://video.test/two",
+        teamId: "team-2",
+        competitionId: "competition-2"
+      }),
+      targetKey,
+      {
+        playerId: "p-1",
+        playerInternalId: "internal-1",
+        playerImageUrl: "https://example.test/player-1.png",
+        teamLogoUrl: "https://example.test/team-1.png",
+        player: "PLAYER ONE",
+        club: "Club One",
+        videoUrl: "https://video.test/one",
+        teamId: "team-1",
+        competitionId: "competition-1"
+      }
+    );
+
+    const moved = moveSlotPayload(withPlayers, sourceKey, targetKey);
+
+    expect(moved[targetKey].rank).toBe(1);
+    expect(moved[targetKey].playerId).toBe("p-2");
+    expect(moved[targetKey].player).toBe("PLAYER TWO");
+    expect(moved[targetKey].club).toBe("Club Two");
+    expect(moved[targetKey].videoUrl).toBe("https://video.test/two");
+    expect(moved[targetKey].teamId).toBe("team-2");
+    expect(moved[targetKey].competitionId).toBe("competition-2");
+
+    expect(moved[sourceKey].rank).toBe(2);
+    expect(moved[sourceKey].playerId).toBe("p-1");
+    expect(moved[sourceKey].player).toBe("PLAYER ONE");
+    expect(moved[sourceKey].club).toBe("Club One");
+    expect(moved[sourceKey].videoUrl).toBe("https://video.test/one");
+    expect(moved[sourceKey].teamId).toBe("team-1");
+    expect(moved[sourceKey].competitionId).toBe("competition-1");
+  });
+
   it("clears payload while preserving coordinates", () => {
     const state = createInitialBoardState();
     const slotKey = buildSlotKey({

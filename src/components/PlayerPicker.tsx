@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { CompetitionsQuery } from "../lib/apiClient";
+import type { CompetitionsQuery, PlayerByTransfermarktQuery } from "../lib/apiClient";
 import { rankAutocompleteOptions } from "../lib/autocompleteSearch";
 import { resolveScoutasticMediaUrl } from "../lib/scoutasticMedia";
 import type { PlayerOption, SlotPayload, TeamDetail, TeamOption } from "../types";
@@ -10,6 +10,7 @@ interface PlayerPickerApi {
   fetchTeams(query: { competitionId: string; seasonId: string }): Promise<TeamOption[]>;
   fetchTeam(query: { teamId: string; gender: string }): Promise<TeamDetail>;
   fetchPlayers(query: { teamId: string; seasonId: string }): Promise<PlayerOption[]>;
+  fetchPlayerByTransfermarkt(query: PlayerByTransfermarktQuery): Promise<PlayerOption>;
 }
 
 interface PlayerPickerProps {
@@ -70,6 +71,7 @@ export function PlayerPicker({
   const [competitionQuery, setCompetitionQuery] = useState("");
   const [teamQuery, setTeamQuery] = useState("");
   const [playerQuery, setPlayerQuery] = useState("");
+  const [transfermarktId, setTransfermarktId] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -81,6 +83,7 @@ export function PlayerPicker({
     setCompetitionQuery("");
     setTeamQuery("");
     setPlayerQuery("");
+    setTransfermarktId("");
     setTeams([]);
     setPlayers([]);
     setError("");
@@ -240,6 +243,35 @@ export function PlayerPicker({
     onApply(payload);
   }
 
+  async function applyTransfermarktPlayer(): Promise<void> {
+    const id = transfermarktId.trim();
+    if (!id) {
+      setError("Transfermarkt ID richiesto");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const player = await api.fetchPlayerByTransfermarkt({ transfermarktId: id, seasonId, gender });
+      const payload = toAutofill(player, "");
+      if (payload.teamId && !payload.teamLogoUrl) {
+        try {
+          const team = await api.fetchTeam({ teamId: payload.teamId, gender });
+          if (team.teamLogoUrl) {
+            payload.teamLogoUrl = resolveScoutasticMediaUrl(team.teamLogoUrl);
+          }
+        } catch {
+          // keep the player payload as returned by the direct lookup
+        }
+      }
+      onApply(payload);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Giocatore non trovato");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (!open) {
     return null;
   }
@@ -255,6 +287,31 @@ export function PlayerPicker({
         </div>
 
         <div className="picker-body">
+          <form
+            className="picker-direct-id"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void applyTransfermarktPlayer();
+            }}
+          >
+            <label>
+              Transfermarkt ID
+              <input
+                aria-label="Transfermarkt ID"
+                value={transfermarktId}
+                onChange={(event) => {
+                  setTransfermarktId(event.target.value);
+                }}
+                placeholder="Es. 698415"
+                autoComplete="off"
+                disabled={loading}
+              />
+            </label>
+            <button type="submit" className="primary" disabled={loading || !transfermarktId.trim()}>
+              Aggiungi da ID
+            </button>
+          </form>
+
           <label>
             Competizione
             <input

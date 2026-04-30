@@ -92,6 +92,7 @@ export interface PlayerApiDoc {
   playerId?: string;
   id?: string;
   internalId?: string;
+  transfermarktId?: string;
   firstName?: string;
   lastName?: string;
   name?: string;

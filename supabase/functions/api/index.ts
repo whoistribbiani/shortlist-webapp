@@ -479,6 +479,25 @@ async function fetchTeamById(teamId: string, gender: string) {
   return { teamId: resolvedTeamId, teamName, teamLogoUrl };
 }
 
+function normalizePlayerDoc(player: Record<string, unknown>, baseUrl: string) {
+  return {
+    playerId: clean(player.playerId) || clean(player.id) || clean(player.internalId) || clean(player.transfermarktId),
+    id: clean(player.id),
+    internalId: clean(player.internalId),
+    transfermarktId: clean(player.transfermarktId),
+    firstName: clean(player.firstName),
+    lastName: clean(player.lastName),
+    name: clean(player.name),
+    dateOfBirth: clean(player.dateOfBirth),
+    contractExpires: clean(player.contractExpires),
+    playerImageUrl: resolveScoutasticMediaUrl(
+      clean(player.playerImageUrl) || clean(player.imageUrlV2) || clean(player.imageUrl),
+      baseUrl
+    ),
+    teams: Array.isArray(player.teams) ? player.teams : []
+  };
+}
+
 async function fetchPlayersByTeam(teamId: string, seasonId: string) {
   const { baseUrl } = scoutasticConfig();
   const payload = (await scoutasticGet(`/teams/${teamId}/players/${seasonId}`, {
@@ -488,18 +507,73 @@ async function fetchPlayersByTeam(teamId: string, seasonId: string) {
     debuts: "false"
   })) as Record<string, unknown>;
   const players = Array.isArray(payload.players) ? (payload.players as Array<Record<string, unknown>>) : [];
-  return players.map((player) => ({
-    playerId: clean(player.playerId) || clean(player.id) || clean(player.internalId),
-    id: clean(player.id),
-    internalId: clean(player.internalId),
-    firstName: clean(player.firstName),
-    lastName: clean(player.lastName),
-    name: clean(player.name),
-    dateOfBirth: clean(player.dateOfBirth),
-    contractExpires: clean(player.contractExpires),
-    playerImageUrl: resolveScoutasticMediaUrl(clean(player.imageUrlV2) || clean(player.imageUrl), baseUrl),
-    teams: Array.isArray(player.teams) ? player.teams : []
-  }));
+  return players.map((player) => normalizePlayerDoc(player, baseUrl));
+}
+
+function firstPlayerDoc(payload: Record<string, unknown>): Record<string, unknown> | null {
+  const direct = payload.player;
+  if (direct && typeof direct === "object" && !Array.isArray(direct)) {
+    return direct as Record<string, unknown>;
+  }
+  for (const key of ["docs", "players", "data", "results"]) {
+    const value = payload[key];
+    if (Array.isArray(value) && value.length > 0 && value[0] && typeof value[0] === "object") {
+      return value[0] as Record<string, unknown>;
+    }
+  }
+  if (clean(payload.transfermarktId) || clean(payload.playerId) || clean(payload.id) || clean(payload.internalId)) {
+    return payload;
+  }
+  return null;
+}
+
+async function fetchPlayerByTransfermarkt(transfermarktId: string, seasonId: string, gender: string) {
+  const { baseUrl } = scoutasticConfig();
+  const attempts: Array<{ path: string; params: Record<string, string | boolean> }> = [
+    {
+      path: `/players/${encodeURIComponent(transfermarktId)}`,
+      params: {
+        seasons: seasonId,
+        gender,
+        marketValues: "false",
+        performanceData: "false",
+        injuryData: "false",
+        debuts: "false"
+      }
+    },
+    {
+      path: "/players",
+      params: {
+        transfermarktId,
+        seasons: seasonId,
+        gender,
+        limit: "1"
+      }
+    },
+    {
+      path: "/players",
+      params: {
+        transfermarktIds: transfermarktId,
+        seasons: seasonId,
+        gender,
+        limit: "1"
+      }
+    }
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const payload = (await scoutasticGet(attempt.path, attempt.params)) as Record<string, unknown>;
+      const player = firstPlayerDoc(payload);
+      if (player) {
+        return normalizePlayerDoc(player, baseUrl);
+      }
+    } catch {
+      // Try the next known Scoutastic lookup shape.
+    }
+  }
+
+  return null;
 }
 
 async function proxyScoutasticPlayerImage(source: string): Promise<Response> {
@@ -915,6 +989,21 @@ Deno.serve(async (request) => {
       }
       const team = await fetchTeamById(teamId, gender);
       return jsonResponse(team);
+    }
+
+    if (segments[0] === "catalog" && segments[1] === "player-by-transfermarkt" && method === "GET") {
+      const url = new URL(request.url);
+      const transfermarktId = clean(url.searchParams.get("transfermarktId"));
+      const seasonId = clean(url.searchParams.get("seasonId")) || "2026";
+      const gender = clean(url.searchParams.get("gender")) || "male";
+      if (!transfermarktId) {
+        return jsonResponse({ error: "transfermarktId is required" }, 400);
+      }
+      const player = await fetchPlayerByTransfermarkt(transfermarktId, seasonId, gender);
+      if (!player) {
+        return jsonResponse({ error: "Player not found for Transfermarkt ID" }, 404);
+      }
+      return jsonResponse({ player });
     }
 
     if (segments[0] === "catalog" && segments[1] === "players" && method === "GET") {

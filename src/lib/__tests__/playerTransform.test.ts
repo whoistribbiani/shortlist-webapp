@@ -58,4 +58,29 @@ describe("playerTransform", () => {
     expect(slot.age).toBe("");
     expect(slot.expiring).toBe("");
   });
+
+  it("uses Transfermarkt ID as player id fallback and maps direct lookup team data", () => {
+    const slot = toAutofillFromApiPlayer(
+      {
+        transfermarktId: "698415",
+        name: "Direct Player",
+        teams: [
+          {
+            isMain: true,
+            name: "Genoa CFC",
+            externalId: "team-3376",
+            imageUrlV2: "/images/team.png"
+          }
+        ]
+      },
+      ""
+    );
+
+    expect(slot.playerId).toBe("698415");
+    expect(slot.player).toBe("Direct Player");
+    expect(slot.club).toBe("Genoa CFC");
+    expect(slot.teamId).toBe("team-3376");
+    expect(slot.teamLogoUrl).toBe("https://genoacfc.scoutastic.com/images/team.png");
+    expect(slot.competitionId).toBe("");
+  });
 });

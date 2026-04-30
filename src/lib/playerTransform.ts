@@ -48,7 +48,7 @@ export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: str
 
   const name = firstName;
   const playerField = lastName || fullName || firstName;
-  const playerId = clean(player.playerId) || clean(player.id) || clean(player.internalId);
+  const playerId = clean(player.playerId) || clean(player.id) || clean(player.internalId) || clean(player.transfermarktId);
   const playerInternalId = clean(player.internalId);
   const teamId = clean(mainTeam?.externalId) || clean(mainTeam?.teamId) || clean(mainTeam?.id);
   const club = clean(mainTeam?.name);

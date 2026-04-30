@@ -1215,6 +1215,32 @@ main {
   padding: 8px 9px;
 }
 
+.picker-direct-id {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-8);
+  border-bottom: 1px solid #e2e8f3;
+  padding-bottom: var(--space-8);
+  margin-bottom: 2px;
+}
+
+.picker-direct-id button {
+  border: 0;
+  border-radius: var(--radius-xs);
+  padding: 9px 12px;
+  background: var(--red-700);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.picker-direct-id button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .picker-suggest-list {
   display: grid;
   gap: 5px;

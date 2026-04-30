@@ -19,6 +19,23 @@ function slotIsEmpty(slot: SlotEntry): boolean {
   );
 }
 
+function slotPayload(slot: SlotEntry): SlotPayload {
+  return {
+    name: slot.name,
+    player: slot.player,
+    club: slot.club,
+    age: slot.age,
+    expiring: slot.expiring,
+    videoUrl: slot.videoUrl,
+    playerId: slot.playerId,
+    playerInternalId: slot.playerInternalId,
+    playerImageUrl: slot.playerImageUrl,
+    teamLogoUrl: slot.teamLogoUrl,
+    teamId: slot.teamId,
+    competitionId: slot.competitionId
+  };
+}
+
 export function createInitialBoardState(): BoardState {
   const out: BoardState = {};
   for (const position of POSITIONS) {
@@ -94,20 +111,8 @@ export function moveSlotPayload(state: BoardState, fromSlotKey: string, toSlotKe
     return state;
   }
 
-  const sourcePayload: SlotPayload = {
-    name: source.name,
-    player: source.player,
-    club: source.club,
-    age: source.age,
-    expiring: source.expiring,
-    videoUrl: source.videoUrl,
-    playerId: source.playerId,
-    playerInternalId: source.playerInternalId,
-    playerImageUrl: source.playerImageUrl,
-    teamLogoUrl: source.teamLogoUrl,
-    teamId: source.teamId,
-    competitionId: source.competitionId
-  };
+  const sourcePayload = slotPayload(source);
+  const nextSourcePayload = slotIsEmpty(target) ? EMPTY_SLOT_PAYLOAD : slotPayload(target);
 
   return {
     ...state,
@@ -117,7 +122,7 @@ export function moveSlotPayload(state: BoardState, fromSlotKey: string, toSlotKe
     },
     [fromSlotKey]: {
       ...source,
-      ...EMPTY_SLOT_PAYLOAD
+      ...nextSourcePayload
     }
   };
 }

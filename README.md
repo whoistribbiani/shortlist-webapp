@@ -62,6 +62,7 @@ npx supabase functions deploy api --no-verify-jwt
 - `GET /api/catalog/competitions?seasonId=&gender=male`
 - `GET /api/catalog/teams?competitionId=&seasonId=`
 - `GET /api/catalog/players?teamId=&seasonId=`
+- `GET /api/catalog/player-by-transfermarkt?transfermarktId=&seasonId=&gender=male`
 - `GET /api/board/current`
 - `PUT /api/board/current`
 - `POST /api/board/current/export-xlsx`

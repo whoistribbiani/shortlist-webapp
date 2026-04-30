@@ -92,6 +92,44 @@ describe("apiClient", () => {
     expect(result.teamLogoUrl).toBe("https://example.test/logo.png");
   });
 
+  it("fetches a player by Transfermarkt ID with auth headers", async () => {
+    const mockFetch = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          player: {
+            transfermarktId: "698415",
+            internalId: "internal-698415",
+            firstName: "Antoine",
+            lastName: "Beydts"
+          }
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      )
+    );
+    globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
+
+    const api = createApiClient("https://api.example.test", () => "token-123");
+    const result = await api.fetchPlayerByTransfermarkt({
+      transfermarktId: "698415",
+      seasonId: "2026",
+      gender: "male"
+    });
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const calledUrl = String(mockFetch.mock.calls[0]?.[0] ?? "");
+    expect(calledUrl).toContain(
+      "/catalog/player-by-transfermarkt?transfermarktId=698415&seasonId=2026&gender=male"
+    );
+    const init = (mockFetch.mock.calls[0]?.[1] ?? {}) as RequestInit;
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer token-123");
+    expect(result.label).toBe("Antoine Beydts");
+    expect(result.transfermarktId).toBe("698415");
+  });
+
   it("adds bearer token on protected requests", async () => {
     const mockFetch = vi.fn(async () =>
       new Response(JSON.stringify({ meta: { shareToken: "", title: "", seasonId: "2026", gender: "male", updatedAt: "" }, slots: [] }), {

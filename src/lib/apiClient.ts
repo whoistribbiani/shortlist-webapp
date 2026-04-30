@@ -21,6 +21,12 @@ export interface PlayersQuery {
   seasonId: string;
 }
 
+export interface PlayerByTransfermarktQuery {
+  transfermarktId: string;
+  seasonId: string;
+  gender: string;
+}
+
 type GetToken = () => string | null;
 
 export interface ApiClient {
@@ -31,6 +37,7 @@ export interface ApiClient {
   fetchTeams(query: TeamsQuery): Promise<TeamOption[]>;
   fetchTeam(query: TeamQuery): Promise<TeamDetail>;
   fetchPlayers(query: PlayersQuery): Promise<PlayerOption[]>;
+  fetchPlayerByTransfermarkt(query: PlayerByTransfermarktQuery): Promise<PlayerOption>;
   getBoardCurrent(): Promise<BoardDocument>;
   putBoardCurrent(payload: BoardDocument): Promise<BoardDocument>;
   exportBoardCurrent(payload: BoardDocument): Promise<Blob>;
@@ -149,6 +156,20 @@ export function createApiClient(baseUrl: string, getToken: GetToken = () => null
         ...player,
         label: playerLabel(player)
       }));
+    },
+
+    async fetchPlayerByTransfermarkt(query) {
+      const url = new URL(buildRequestUrl(baseUrl, "/catalog/player-by-transfermarkt"));
+      url.searchParams.set("transfermarktId", query.transfermarktId);
+      url.searchParams.set("seasonId", query.seasonId);
+      url.searchParams.set("gender", query.gender);
+      const payload = await fetchJson<{ player: PlayerOption }>(url.toString(), {
+        headers: authHeaders(getToken)
+      });
+      return {
+        ...payload.player,
+        label: playerLabel(payload.player)
+      };
     },
 
     async getBoardCurrent() {
