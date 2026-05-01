@@ -27,19 +27,12 @@ import { parseSlotKey } from "./lib/slotKey";
 import { toAutofillFromApiPlayer } from "./lib/playerTransform";
 import type { BoardDocument, BoardMeta, PositionId, SlotEntry, SlotPayload } from "./types";
 
-type BoardZoom = "small" | "default" | "large";
+type BoardZoom = 50 | 67 | 75 | 80 | 90 | 100 | 110 | 125 | 150;
 
-const BOARD_ZOOM_LEVELS: BoardZoom[] = ["small", "default", "large"];
+const BOARD_ZOOM_LEVELS: BoardZoom[] = [50, 67, 75, 80, 90, 100, 110, 125, 150];
 
 function zoomLabel(zoom: BoardZoom): string {
-  switch (zoom) {
-    case "small":
-      return "75%";
-    case "large":
-      return "125%";
-    default:
-      return "100%";
-  }
+  return `${zoom}%`;
 }
 
 interface AppProps {
@@ -125,7 +118,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [bannerMessage, setBannerMessage] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState("");
-  const [boardZoom, setBoardZoom] = useState<BoardZoom>("default");
+  const [boardZoom, setBoardZoom] = useState<BoardZoom>(100);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -301,8 +294,8 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
             className="board-zoom-value"
             data-testid="zoom-reset"
             aria-label="Reset zoom board"
-            disabled={boardZoom === "default"}
-            onClick={() => setBoardZoom("default")}
+            disabled={boardZoom === 100}
+            onClick={() => setBoardZoom(100)}
           >
             {zoomLabel(boardZoom)}
           </button>

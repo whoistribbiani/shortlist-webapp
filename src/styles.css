@@ -510,6 +510,7 @@ main {
 }
 
 .scenario-board {
+  --board-zoom: 1;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   background: #f5f8fc;
@@ -528,14 +529,8 @@ main {
   gap: var(--space-8);
   min-width: calc(48px + (var(--scenario-column-width) * 4) + (var(--space-8) * 4) + (var(--space-8) * 2));
   padding: var(--space-8);
-}
-
-.scenario-board[data-zoom="small"] .scenario-layout-grid {
-  --slot-size: 280px;
-}
-
-.scenario-board[data-zoom="large"] .scenario-layout-grid {
-  --slot-size: 430px;
+  transform-origin: top left;
+  zoom: var(--board-zoom);
 }
 
 .rank-column-card {

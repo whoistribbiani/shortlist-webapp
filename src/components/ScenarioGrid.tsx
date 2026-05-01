@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { LANES, RANKS, SCENARIOS } from "../constants/layout";
 import type { BoardState } from "../lib/boardModel";
 import { buildSlotKey } from "../lib/slotKey";
@@ -8,7 +10,7 @@ import { SlotCard } from "./SlotCard";
 interface ScenarioGridProps {
   apiBaseUrl: string;
   positionId: PositionId;
-  zoom: "small" | "default" | "large";
+  zoom: number;
   state: BoardState;
   duplicateSlotKeys: Set<string>;
   onPatchSlot: (slotKey: string, patch: Partial<SlotEntry>) => void;
@@ -27,7 +29,12 @@ export function ScenarioGrid({
   onOpenPicker
 }: ScenarioGridProps): JSX.Element {
   return (
-    <section className="scenario-board" data-testid="scenario-board" data-zoom={zoom}>
+    <section
+      className="scenario-board"
+      data-testid="scenario-board"
+      data-zoom={zoom}
+      style={{ "--board-zoom": zoom / 100 } as CSSProperties}
+    >
       <div className="scenario-board-scroll">
         <div className="scenario-layout-grid">
           <aside className="rank-column-card">
