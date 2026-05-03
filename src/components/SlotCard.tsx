@@ -45,9 +45,11 @@ export function SlotCard({
   });
 
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
+  const isLoanMarked = slot.slotColor === "loan-blue";
   const cardClassName = [
     "slot-card",
     filled ? "slot-card-filled" : "slot-card-empty",
+    filled && isLoanMarked ? "slot-card-loan" : "",
     isOver ? "slot-over" : "",
     isDragging ? "slot-dragging" : "",
     duplicateBlocked ? "slot-error" : ""
@@ -142,6 +144,7 @@ export function SlotCard({
               actionGroup={
                 <ActionIconGroup
                   filled
+                  loanMarked={isLoanMarked}
                   onSelect={() => onOpenPicker(slotKey)}
                   onRemove={() => {
                     if (!window.confirm("Rimuovere il player da questo slot?")) {
@@ -149,6 +152,12 @@ export function SlotCard({
                     }
                     onClearSlot(slotKey);
                   }}
+                  onToggleLoan={() =>
+                    onPatch(slotKey, {
+                      slotColor: isLoanMarked ? "" : "loan-blue",
+                      loanFrom: isLoanMarked ? "" : slot.loanFrom
+                    })
+                  }
                   dragHandleProps={{
                     ...listeners,
                     ...attributes

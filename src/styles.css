@@ -690,6 +690,11 @@ main {
   box-shadow: var(--soft-shadow);
 }
 
+.slot-card-loan {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
 .slot-card-empty {
   background: #f7f9fc;
 }
@@ -716,7 +721,7 @@ main {
 
 .slot-actions {
   display: grid;
-  grid-template-columns: repeat(3, 28px);
+  grid-template-columns: repeat(4, 28px);
   justify-content: end;
   gap: var(--space-8);
   margin-bottom: var(--space-12);
@@ -729,6 +734,7 @@ main {
 
 .pick-btn,
 .clear-btn,
+.loan-toggle-btn,
 .drag-handle {
   width: 28px;
   height: 28px;
@@ -744,6 +750,7 @@ main {
 
 .pick-btn:hover,
 .clear-btn:hover,
+.loan-toggle-btn:hover,
 .drag-handle:hover {
   color: #425273;
   border-color: #b9c6db;
@@ -751,10 +758,27 @@ main {
 
 .pick-btn svg,
 .clear-btn svg,
+.loan-toggle-btn span,
 .drag-handle svg {
   width: 14px;
   height: 14px;
   fill: currentColor;
+}
+
+.loan-toggle-btn span {
+  display: block;
+  border-radius: 50%;
+  background: #93a3bb;
+}
+
+.loan-toggle-active {
+  color: #1d4ed8;
+  border-color: #60a5fa;
+  background: #eff6ff;
+}
+
+.loan-toggle-active span {
+  background: currentColor;
 }
 
 .drag-handle:disabled {

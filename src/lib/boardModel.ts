@@ -27,6 +27,8 @@ function slotPayload(slot: SlotEntry): SlotPayload {
     age: slot.age,
     expiring: slot.expiring,
     videoUrl: slot.videoUrl,
+    slotColor: slot.slotColor,
+    loanFrom: slot.loanFrom,
     playerId: slot.playerId,
     playerInternalId: slot.playerInternalId,
     playerImageUrl: slot.playerImageUrl,

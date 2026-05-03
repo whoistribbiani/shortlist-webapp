@@ -97,7 +97,12 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
               playerImageUrl: "/api/v1/images/player/698415-1720429585.jpg",
               dateOfBirth: "2008-01-01T00:00:00.000Z",
               contractExpires: "2026-06-30T00:00:00.000Z",
-              teams: [{ isMain: true, name: "VITORIA GUIMARAES SPORTING CLUB MOLTO LUNGO", externalId: "team-1" }]
+              teams: [{ isMain: true, name: "VITORIA GUIMARAES SPORTING CLUB MOLTO LUNGO", externalId: "team-1" }],
+              onLoanFrom: {
+                name: "AFC Bournemouth",
+                externalId: 989,
+                transfermarktId: 989
+              }
             }
           ]
         })
@@ -244,6 +249,13 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   );
   await expect(firstCard.locator(".slot-player-first-name")).toHaveText("Antoine");
   await expect(firstCard.locator(".slot-team-logo")).toHaveAttribute("src", /\/api\/catalog\/player-image\?src=/);
+  await expect(firstCard).toHaveClass(/slot-card-loan/);
+  await expect(firstCard.getByTestId("slot-loan-toggle")).toHaveAttribute("aria-pressed", "true");
+  await firstCard.getByTestId("slot-loan-toggle").click();
+  await expect(firstCard).not.toHaveClass(/slot-card-loan/);
+  await expect(firstCard.getByTestId("slot-loan-toggle")).toHaveAttribute("aria-pressed", "false");
+  await firstCard.getByTestId("slot-loan-toggle").click();
+  await expect(firstCard).toHaveClass(/slot-card-loan/);
   expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
   expect(hasPlayerImageProxyRequest).toBe(true);

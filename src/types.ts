@@ -36,6 +36,8 @@ export interface SlotPayload {
   age: string;
   expiring: string;
   videoUrl: string;
+  slotColor: string;
+  loanFrom: string;
   playerId: string;
   playerInternalId: string;
   playerImageUrl: string;
@@ -102,6 +104,7 @@ export interface PlayerApiDoc {
   imageUrl?: string;
   playerImageUrl?: string;
   teams?: PlayerApiTeam[];
+  onLoanFrom?: PlayerApiTeam;
 }
 
 export interface PlayerOption extends PlayerApiDoc {

@@ -55,6 +55,8 @@ export const EMPTY_SLOT_PAYLOAD: SlotPayload = {
   age: "",
   expiring: "",
   videoUrl: "",
+  slotColor: "",
+  loanFrom: "",
   playerId: "",
   playerInternalId: "",
   playerImageUrl: "",

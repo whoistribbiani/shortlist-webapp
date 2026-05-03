@@ -83,4 +83,37 @@ describe("playerTransform", () => {
     expect(slot.teamLogoUrl).toBe("https://genoacfc.scoutastic.com/images/team.png");
     expect(slot.competitionId).toBe("");
   });
+
+  it("marks players with onLoanFrom as loan-blue slots", () => {
+    const slot = toAutofillFromApiPlayer(
+      {
+        playerId: "loan-player",
+        firstName: "Loan",
+        lastName: "Player",
+        onLoanFrom: {
+          name: "AFC Bournemouth",
+          externalId: "989",
+          transfermarktId: "989"
+        }
+      },
+      "comp-loan"
+    );
+
+    expect(slot.slotColor).toBe("loan-blue");
+    expect(slot.loanFrom).toBe("AFC Bournemouth");
+  });
+
+  it("leaves loan color empty when onLoanFrom is missing", () => {
+    const slot = toAutofillFromApiPlayer(
+      {
+        playerId: "owned-player",
+        firstName: "Owned",
+        lastName: "Player"
+      },
+      "comp-owned"
+    );
+
+    expect(slot.slotColor).toBe("");
+    expect(slot.loanFrom).toBe("");
+  });
 });

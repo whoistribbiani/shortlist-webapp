@@ -52,6 +52,7 @@ export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: str
   const playerInternalId = clean(player.internalId);
   const teamId = clean(mainTeam?.externalId) || clean(mainTeam?.teamId) || clean(mainTeam?.id);
   const club = clean(mainTeam?.name);
+  const loanFrom = clean(player.onLoanFrom?.name);
 
   return {
     ...EMPTY_SLOT_PAYLOAD,
@@ -60,6 +61,8 @@ export function toAutofillFromApiPlayer(player: PlayerApiDoc, competitionId: str
     club,
     age: isoDateToYear(player.dateOfBirth),
     expiring: isoDateToDay(player.contractExpires),
+    slotColor: loanFrom ? "loan-blue" : "",
+    loanFrom,
     playerId,
     playerInternalId,
     playerImageUrl: resolvePlayerImageUrl(player),

@@ -78,7 +78,9 @@ describe("boardModel", () => {
       teamLogoUrl: "https://example.test/team.png",
       player: "MOVER",
       club: "Genoa",
-      videoUrl: "https://onedrive.live.com/video"
+      videoUrl: "https://onedrive.live.com/video",
+      slotColor: "loan-blue",
+      loanFrom: "Parent FC"
     });
 
     const moved = moveSlotPayload(withPlayer, sourceKey, targetKey);
@@ -90,6 +92,8 @@ describe("boardModel", () => {
     expect(moved[targetKey].playerImageUrl).toBe("https://example.test/player.png");
     expect(moved[targetKey].teamLogoUrl).toBe("https://example.test/team.png");
     expect(moved[targetKey].videoUrl).toBe("https://onedrive.live.com/video");
+    expect(moved[targetKey].slotColor).toBe("loan-blue");
+    expect(moved[targetKey].loanFrom).toBe("Parent FC");
   });
 
   it("swaps payloads when moving onto a populated slot", () => {
@@ -117,7 +121,9 @@ describe("boardModel", () => {
         club: "Club Two",
         videoUrl: "https://video.test/two",
         teamId: "team-2",
-        competitionId: "competition-2"
+        competitionId: "competition-2",
+        slotColor: "loan-blue",
+        loanFrom: "Club Two Parent"
       }),
       targetKey,
       {
@@ -129,7 +135,9 @@ describe("boardModel", () => {
         club: "Club One",
         videoUrl: "https://video.test/one",
         teamId: "team-1",
-        competitionId: "competition-1"
+        competitionId: "competition-1",
+        slotColor: "",
+        loanFrom: ""
       }
     );
 
@@ -142,6 +150,8 @@ describe("boardModel", () => {
     expect(moved[targetKey].videoUrl).toBe("https://video.test/two");
     expect(moved[targetKey].teamId).toBe("team-2");
     expect(moved[targetKey].competitionId).toBe("competition-2");
+    expect(moved[targetKey].slotColor).toBe("loan-blue");
+    expect(moved[targetKey].loanFrom).toBe("Club Two Parent");
 
     expect(moved[sourceKey].rank).toBe(2);
     expect(moved[sourceKey].playerId).toBe("p-1");
@@ -150,6 +160,8 @@ describe("boardModel", () => {
     expect(moved[sourceKey].videoUrl).toBe("https://video.test/one");
     expect(moved[sourceKey].teamId).toBe("team-1");
     expect(moved[sourceKey].competitionId).toBe("competition-1");
+    expect(moved[sourceKey].slotColor).toBe("");
+    expect(moved[sourceKey].loanFrom).toBe("");
   });
 
   it("clears payload while preserving coordinates", () => {
@@ -168,7 +180,9 @@ describe("boardModel", () => {
       playerInternalId: "internal-1",
       playerImageUrl: "https://example.test/player.png",
       teamLogoUrl: "https://example.test/team.png",
-      videoUrl: "https://video.test/id"
+      videoUrl: "https://video.test/id",
+      slotColor: "loan-blue",
+      loanFrom: "Parent FC"
     });
     const cleared = clearSlotPayload(withPlayer, slotKey);
 
@@ -180,6 +194,8 @@ describe("boardModel", () => {
     expect(cleared[slotKey].playerImageUrl).toBe("");
     expect(cleared[slotKey].teamLogoUrl).toBe("");
     expect(cleared[slotKey].videoUrl).toBe("");
+    expect(cleared[slotKey].slotColor).toBe("");
+    expect(cleared[slotKey].loanFrom).toBe("");
   });
 
   it("allows reusing same player in position after clear", () => {

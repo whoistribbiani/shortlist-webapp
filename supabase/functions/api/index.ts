@@ -15,6 +15,8 @@ interface SlotEntry {
   age: string;
   expiring: string;
   videoUrl: string;
+  slotColor: string;
+  loanFrom: string;
   playerId: string;
   playerInternalId: string;
   playerImageUrl: string;
@@ -260,6 +262,8 @@ function normalizeSlot(input: unknown): SlotEntry | null {
     age: clean(raw.age),
     expiring: clean(raw.expiring),
     videoUrl: clean(raw.videoUrl),
+    slotColor: clean(raw.slotColor),
+    loanFrom: clean(raw.loanFrom),
     playerId: clean(raw.playerId),
     playerInternalId: clean(raw.playerInternalId),
     playerImageUrl: clean(raw.playerImageUrl),
@@ -494,7 +498,11 @@ function normalizePlayerDoc(player: Record<string, unknown>, baseUrl: string) {
       clean(player.playerImageUrl) || clean(player.imageUrlV2) || clean(player.imageUrl),
       baseUrl
     ),
-    teams: Array.isArray(player.teams) ? player.teams : []
+    teams: Array.isArray(player.teams) ? player.teams : [],
+    onLoanFrom:
+      player.onLoanFrom && typeof player.onLoanFrom === "object" && !Array.isArray(player.onLoanFrom)
+        ? player.onLoanFrom
+        : undefined
   };
 }
 
@@ -633,7 +641,7 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
   const slotsResponse = await supabase
     .from("board_slots")
     .select(
-      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, player_id, player_internal_id, player_image_url, team_logo_url, team_id, competition_id"
+      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, slot_color, loan_from, player_id, player_internal_id, player_image_url, team_logo_url, team_id, competition_id"
     )
     .eq("board_id", board.id);
 
@@ -652,6 +660,8 @@ async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
     age: clean(row.age),
     expiring: clean(row.expiring),
     videoUrl: clean(row.video_url),
+    slotColor: clean(row.slot_color),
+    loanFrom: clean(row.loan_from),
     playerId: clean(row.player_id),
     playerInternalId: clean(row.player_internal_id),
     playerImageUrl: clean(row.player_image_url),
@@ -726,6 +736,8 @@ async function saveBoardDocument(shareToken: string, payload: BoardDocument): Pr
       age: slot.age,
       expiring: slot.expiring,
       video_url: slot.videoUrl,
+      slot_color: slot.slotColor,
+      loan_from: slot.loanFrom,
       player_id: slot.playerId,
       player_internal_id: slot.playerInternalId,
       player_image_url: slot.playerImageUrl,

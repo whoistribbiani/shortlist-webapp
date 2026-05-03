@@ -2,12 +2,21 @@ import type { ButtonHTMLAttributes } from "react";
 
 interface ActionIconGroupProps {
   filled: boolean;
+  loanMarked?: boolean;
   onSelect: () => void;
   onRemove: () => void;
+  onToggleLoan?: () => void;
   dragHandleProps?: ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
-export function ActionIconGroup({ filled, onSelect, onRemove, dragHandleProps }: ActionIconGroupProps): JSX.Element {
+export function ActionIconGroup({
+  filled,
+  loanMarked = false,
+  onSelect,
+  onRemove,
+  onToggleLoan,
+  dragHandleProps
+}: ActionIconGroupProps): JSX.Element {
   if (!filled) {
     return <div className="slot-actions slot-actions-empty" />;
   }
@@ -46,6 +55,18 @@ export function ActionIconGroup({ filled, onSelect, onRemove, dragHandleProps }:
             strokeLinejoin="round"
           />
         </svg>
+      </button>
+
+      <button
+        type="button"
+        className={`loan-toggle-btn ${loanMarked ? "loan-toggle-active" : ""}`.trim()}
+        data-testid="slot-loan-toggle"
+        aria-label={loanMarked ? "Rimuovi colore prestito" : "Segna come prestito"}
+        title={loanMarked ? "Rimuovi colore prestito" : "Segna come prestito"}
+        aria-pressed={loanMarked}
+        onClick={onToggleLoan}
+      >
+        <span aria-hidden="true" />
       </button>
 
       <button
