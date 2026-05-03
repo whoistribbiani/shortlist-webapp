@@ -17,6 +17,7 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   let hasTeamLogoRequest = false;
   let hasPlayerImageProxyRequest = false;
   let hasTeamLogoProxyRequest = false;
+  let persistedBoardResponse = emptyBoardResponse;
   page.on("dialog", (dialog) => dialog.accept());
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -164,11 +165,12 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(emptyBoardResponse)
+        body: JSON.stringify(persistedBoardResponse)
       });
     }
     if (route.request().method() === "PUT" && path.includes("/board/current")) {
       const body = route.request().postData() ?? "{}";
+      persistedBoardResponse = JSON.parse(body);
       return route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -256,6 +258,13 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(firstCard.getByTestId("slot-loan-toggle")).toHaveAttribute("aria-pressed", "false");
   await firstCard.getByTestId("slot-loan-toggle").click();
   await expect(firstCard).toHaveClass(/slot-card-loan/);
+  await expect
+    .poll(() => persistedBoardResponse.slots.find((slot) => slot.playerId === "player-1")?.slotColor)
+    .toBe("loan-blue");
+  await page.reload();
+  await expect(firstCard).toHaveAttribute("data-state", "filled");
+  await expect(firstCard).toHaveClass(/slot-card-loan/);
+  await expect(firstCard.getByTestId("slot-loan-toggle")).toHaveAttribute("aria-pressed", "true");
   expect(hasAuthorizedApiCall).toBe(true);
   expect(hasImageProxyRequest).toBe(true);
   expect(hasPlayerImageProxyRequest).toBe(true);
