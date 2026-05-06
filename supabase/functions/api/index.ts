@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import * as XLSX from "npm:xlsx@0.18.5";
 
+import { findUserByPassword, parseAppUsersConfig, type AppUserConfig } from "./authConfig.ts";
+
 type ScenarioId = "0-2" | "2-5" | "5-10" | "10-20";
 type LaneId = "A1B1" | "A2" | "B1";
 
@@ -75,6 +77,7 @@ const CORS_HEADERS = {
 interface AuthTokenPayload {
   sub: string;
   exp: number;
+  boardToken: string;
 }
 
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
@@ -101,29 +104,13 @@ function getDefaultBoardToken(): string {
   return token;
 }
 
-function parseUsersPasswords(): string[] {
-  const raw = clean(Deno.env.get("APP_USERS_PASSWORDS_JSON") ?? "");
-  if (!raw) {
-    throw new Error("Missing APP_USERS_PASSWORDS_JSON");
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("Invalid APP_USERS_PASSWORDS_JSON");
-  }
-
-  const list = Array.isArray(parsed)
-    ? parsed
-    : parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).passwords)
-      ? ((parsed as Record<string, unknown>).passwords as unknown[])
-      : [];
-
-  const out = list.map((item) => clean(item)).filter(Boolean);
-  if (out.length === 0) {
-    throw new Error("No valid passwords in APP_USERS_PASSWORDS_JSON");
-  }
-  return out;
+function parseUsers(): AppUserConfig[] {
+  return parseAppUsersConfig({
+    usersJson: Deno.env.get("APP_USERS_JSON") ?? "",
+    additionalUsersJson: Deno.env.get("APP_ADDITIONAL_USERS_JSON") ?? "",
+    passwordsJson: Deno.env.get("APP_USERS_PASSWORDS_JSON") ?? "",
+    defaultBoardToken: Deno.env.get("APP_DEFAULT_BOARD_TOKEN") ?? ""
+  });
 }
 
 function authSigningSecret(): string {
@@ -201,7 +188,8 @@ async function verifyAuthToken(token: string): Promise<AuthTokenPayload | null> 
     }
     return {
       sub: clean(parsed.sub),
-      exp
+      exp,
+      boardToken: tokenIsValid(clean(parsed.boardToken)) ? clean(parsed.boardToken) : getDefaultBoardToken()
     };
   } catch {
     return null;
@@ -634,6 +622,102 @@ async function ensureBoard(shareToken: string) {
   return inserted.data;
 }
 
+async function ensureBoardForUser(user: Pick<AppUserConfig, "boardToken" | "cloneFromBoardToken">) {
+  const supabase = getSupabaseAdmin();
+  const existing = await supabase
+    .from("boards")
+    .select("id, share_token, title, season_id, gender, updated_at")
+    .eq("share_token", user.boardToken)
+    .maybeSingle();
+  if (existing.error) {
+    throw existing.error;
+  }
+  if (existing.data) {
+    return existing.data;
+  }
+
+  if (!user.cloneFromBoardToken) {
+    return ensureBoard(user.boardToken);
+  }
+
+  const source = await ensureBoard(user.cloneFromBoardToken);
+  const inserted = await supabase
+    .from("boards")
+    .insert({
+      share_token: user.boardToken,
+      title: clean(source.title) || "Scouting ShortList",
+      season_id: clean(source.season_id) || "2026",
+      gender: clean(source.gender) === "female" ? "female" : "male"
+    })
+    .select("id, share_token, title, season_id, gender, updated_at")
+    .single();
+  if (inserted.error) {
+    const retry = await supabase
+      .from("boards")
+      .select("id, share_token, title, season_id, gender, updated_at")
+      .eq("share_token", user.boardToken)
+      .maybeSingle();
+    if (retry.error || !retry.data) {
+      throw inserted.error;
+    }
+    return retry.data;
+  }
+
+  const sourceMeta = await supabase.from("board_meta").select("payload").eq("board_id", source.id).maybeSingle();
+  if (sourceMeta.error) {
+    throw sourceMeta.error;
+  }
+  if (sourceMeta.data) {
+    const metaInsert = await supabase.from("board_meta").insert({
+      board_id: inserted.data.id,
+      payload: sourceMeta.data.payload ?? {}
+    });
+    if (metaInsert.error) {
+      throw metaInsert.error;
+    }
+  }
+
+  const sourceSlots = await supabase
+    .from("board_slots")
+    .select(
+      "position_id, rank, scenario, lane, name, player, club, age, expiring, video_url, slot_color, loan_from, player_id, player_internal_id, player_image_url, team_logo_url, team_id, competition_id"
+    )
+    .eq("board_id", source.id);
+  if (sourceSlots.error) {
+    throw sourceSlots.error;
+  }
+
+  const rows = (sourceSlots.data ?? []).map((slot) => ({
+    board_id: inserted.data.id,
+    position_id: slot.position_id,
+    rank: slot.rank,
+    scenario: slot.scenario,
+    lane: slot.lane,
+    name: slot.name ?? "",
+    player: slot.player ?? "",
+    club: slot.club ?? "",
+    age: slot.age ?? "",
+    expiring: slot.expiring ?? "",
+    video_url: slot.video_url ?? "",
+    slot_color: slot.slot_color ?? "",
+    loan_from: slot.loan_from ?? "",
+    player_id: slot.player_id ?? "",
+    player_internal_id: slot.player_internal_id ?? "",
+    player_image_url: slot.player_image_url ?? "",
+    team_logo_url: slot.team_logo_url ?? "",
+    team_id: slot.team_id ?? "",
+    competition_id: slot.competition_id ?? ""
+  }));
+  if (rows.length > 0) {
+    const slotsInsert = await supabase.from("board_slots").insert(rows);
+    if (slotsInsert.error) {
+      throw slotsInsert.error;
+    }
+  }
+
+  return inserted.data;
+}
+
 async function fetchBoardDocument(shareToken: string): Promise<BoardDocument> {
   const supabase = getSupabaseAdmin();
   const board = await ensureBoard(shareToken);
@@ -936,13 +1020,15 @@ Deno.serve(async (request) => {
       if (!password) {
         return jsonResponse({ error: "password is required" }, 400);
       }
-      const validPasswords = parseUsersPasswords();
-      if (!validPasswords.includes(password)) {
+      const user = findUserByPassword(parseUsers(), password);
+      if (!user) {
         return jsonResponse({ error: "Invalid credentials" }, 401);
       }
+      await ensureBoardForUser(user);
       const token = await createAuthToken({
         sub: "owner-managed-user",
-        exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS
+        exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+        boardToken: user.boardToken
       });
       return jsonResponse({ token });
     }
@@ -1030,18 +1116,18 @@ Deno.serve(async (request) => {
     }
 
     if (segments[0] === "board" && segments[1] === "current" && method === "GET") {
-      const board = await fetchBoardDocument(getDefaultBoardToken());
+      const board = await fetchBoardDocument(auth.boardToken);
       return jsonResponse(board);
     }
 
     if (segments[0] === "board" && segments[1] === "current" && method === "PUT") {
       const payload = (await request.json()) as BoardDocument;
-      const board = await saveBoardDocument(getDefaultBoardToken(), payload);
+      const board = await saveBoardDocument(auth.boardToken, payload);
       return jsonResponse(board);
     }
 
     if (segments[0] === "board" && segments[1] === "current" && segments[2] === "export-xlsx" && method === "POST") {
-      const shareToken = getDefaultBoardToken();
+      const shareToken = auth.boardToken;
       const payload = (await request.json()) as BoardDocument;
       const normalizedSlots = Array.isArray(payload.slots)
         ? payload.slots.map((slot) => normalizeSlot(slot)).filter((slot): slot is SlotEntry => slot !== null)

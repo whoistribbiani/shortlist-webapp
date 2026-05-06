@@ -370,3 +370,95 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   );
   await expect(firstCard.locator(".slot-player-team")).toHaveText("Direct FC");
 });
+
+test("keeps boards independent across different password sessions", async ({ page }) => {
+  const primaryBoard = {
+    meta: {
+      shareToken: "primary-board",
+      title: "Primary Seed",
+      seasonId: "2026",
+      gender: "male",
+      updatedAt: new Date().toISOString()
+    },
+    slots: []
+  };
+  const secondaryBoard = {
+    meta: {
+      shareToken: "secondary-board",
+      title: "Secondary Seed",
+      seasonId: "2026",
+      gender: "male",
+      updatedAt: new Date().toISOString()
+    },
+    slots: []
+  };
+  const boardsByToken: Record<string, typeof primaryBoard> = {
+    "token-primary": primaryBoard,
+    "token-secondary": secondaryBoard
+  };
+
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname;
+    const auth = route.request().headers()["authorization"] ?? "";
+    const token = auth.replace(/^Bearer\s+/i, "");
+
+    if (route.request().method() === "POST" && path.includes("/auth/login")) {
+      const body = JSON.parse(route.request().postData() ?? "{}") as { password?: string };
+      if (body.password === "primary-pass") {
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ token: "token-primary" }) });
+      }
+      if (body.password === "secondary-pass") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ token: "token-secondary" })
+        });
+      }
+      return route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Invalid credentials" }) });
+    }
+    if (route.request().method() === "POST" && path.includes("/auth/validate")) {
+      return route.fulfill({
+        status: boardsByToken[token] ? 200 : 401,
+        contentType: "application/json",
+        body: JSON.stringify({ valid: !!boardsByToken[token] })
+      });
+    }
+    if (route.request().method() === "POST" && path.includes("/auth/logout")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    }
+    if (route.request().method() === "GET" && path.includes("/board/current")) {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(boardsByToken[token])
+      });
+    }
+    if (route.request().method() === "PUT" && path.includes("/board/current")) {
+      boardsByToken[token] = JSON.parse(route.request().postData() ?? "{}");
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(boardsByToken[token])
+      });
+    }
+    if (route.request().method() === "POST" && path.includes("/board/current/export-xlsx")) {
+      return route.fulfill({ status: 200, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", body: "ok" });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ competitions: [], teams: [], players: [] }) });
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Password").fill("primary-pass");
+  await page.getByRole("button", { name: "Accedi" }).click();
+  await expect(page.getByLabel("Titolo")).toHaveValue("Primary Seed");
+  await page.getByLabel("Titolo").fill("Primary Edited");
+  await expect.poll(() => boardsByToken["token-primary"].meta.title).toBe("Primary Edited");
+
+  await page.getByRole("button", { name: "Logout" }).click();
+  await page.getByLabel("Password").fill("secondary-pass");
+  await page.getByRole("button", { name: "Accedi" }).click();
+  await expect(page.getByLabel("Titolo")).toHaveValue("Secondary Seed");
+  expect(boardsByToken["token-primary"].meta.title).toBe("Primary Edited");
+  expect(boardsByToken["token-secondary"].meta.title).toBe("Secondary Seed");
+});
