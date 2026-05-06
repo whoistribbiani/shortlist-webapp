@@ -118,7 +118,7 @@ export default function App({ apiBaseUrl, api, onLogout }: AppProps): JSX.Elemen
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [bannerMessage, setBannerMessage] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState("");
-  const [boardZoom, setBoardZoom] = useState<BoardZoom>(100);
+  const [boardZoom, setBoardZoom] = useState<BoardZoom>(75);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
