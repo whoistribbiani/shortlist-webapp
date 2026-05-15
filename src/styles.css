@@ -695,6 +695,11 @@ main {
   border-color: #93c5fd;
 }
 
+.slot-card-has-video {
+  border-color: #2aa889;
+  box-shadow: 0 0 0 2px rgba(42, 168, 137, 0.16), var(--soft-shadow);
+}
+
 .slot-card-empty {
   background: #f7f9fc;
 }
@@ -818,6 +823,22 @@ main {
   text-align: right;
 }
 
+.slot-video-badge {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border: 1px solid #89d8c0;
+  border-radius: 999px;
+  background: #dff8ef;
+  color: #0f6d58;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .slot-player-first-name {
   width: 100%;
   color: #5f6f8f;
@@ -938,6 +959,18 @@ main {
 .video-icon-btn:hover {
   color: #425273;
   border-color: #b9c6db;
+}
+
+.video-icon-active {
+  border-color: #64c9ad;
+  background: #e8fbf5;
+  color: #0f8065;
+}
+
+.video-icon-active:hover {
+  border-color: #2aa889;
+  background: #d9f8ee;
+  color: #075d49;
 }
 
 .video-icon-btn svg {

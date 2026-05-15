@@ -46,10 +46,12 @@ export function SlotCard({
 
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
   const isLoanMarked = slot.slotColor === "loan-blue";
+  const hasValidVideoUrl = isValidVideoUrl(slot.videoUrl);
   const cardClassName = [
     "slot-card",
     filled ? "slot-card-filled" : "slot-card-empty",
     filled && isLoanMarked ? "slot-card-loan" : "",
+    filled && hasValidVideoUrl ? "slot-card-has-video" : "",
     isOver ? "slot-over" : "",
     isDragging ? "slot-dragging" : "",
     duplicateBlocked ? "slot-error" : ""
@@ -80,7 +82,6 @@ export function SlotCard({
     () => buildPlayerImageProxyUrl(apiBaseUrl, slot.teamLogoUrl),
     [apiBaseUrl, slot.teamLogoUrl]
   );
-  const hasValidVideoUrl = isValidVideoUrl(slot.videoUrl);
   const playerFirstNameText = slot.name.trim();
   const playerNameText = slot.player || (canLinkProfile ? "Apri profilo" : "Player");
   const playerClubText = slot.club || "Club";
@@ -180,6 +181,11 @@ export function SlotCard({
                     </div>
                   )}
                   <div className="slot-player-meta">
+                    {hasValidVideoUrl && (
+                      <span className="slot-video-badge" data-testid="video-available-badge">
+                        Video
+                      </span>
+                    )}
                     {playerFirstNameText && (
                       <span
                         ref={playerFirstNameRef}
@@ -288,7 +294,7 @@ export function SlotCard({
                     </a>
                   )}
                   <a
-                    className={`video-icon-btn ${hasValidVideoUrl ? "" : "video-icon-disabled"}`.trim()}
+                    className={`video-icon-btn ${hasValidVideoUrl ? "video-icon-active" : "video-icon-disabled"}`.trim()}
                     data-testid="video-open"
                     href={hasValidVideoUrl ? slot.videoUrl : undefined}
                     target="_blank"

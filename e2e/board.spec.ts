@@ -271,6 +271,8 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   expect(hasTeamLogoProxyRequest).toBe(true);
   expect(hasTeamLogoRequest).toBe(false);
 
+  await expect(firstCard).not.toHaveClass(/slot-card-has-video/);
+  await expect(firstCard.getByTestId("video-available-badge")).toHaveCount(0);
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
   await firstCard.getByTestId("video-edit").click();
   await expect(page.getByTestId("video-popover-overlay")).toBeVisible();
@@ -286,6 +288,9 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
     "https://onedrive.live.com/watch?v=abcdefghijk_lunghissimo_valore"
   );
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "false");
+  await expect(firstCard).toHaveClass(/slot-card-has-video/);
+  await expect(firstCard.getByTestId("video-open")).toHaveClass(/video-icon-active/);
+  await expect(firstCard.getByTestId("video-available-badge")).toHaveText("Video");
 
   await firstCard.getByTestId("video-edit").click();
   await expect(page.getByTestId("video-popover-overlay")).toBeVisible();
@@ -295,6 +300,9 @@ test("selects a player with autocomplete flow and enriches the slot", async ({ p
   await expect(page.getByTestId("video-popover-overlay")).toHaveCount(0);
   await expect(firstCard.getByTestId("video-open")).not.toHaveAttribute("href", /https?:\/\//);
   await expect(firstCard.getByTestId("video-open")).toHaveAttribute("aria-disabled", "true");
+  await expect(firstCard).not.toHaveClass(/slot-card-has-video/);
+  await expect(firstCard.getByTestId("video-open")).not.toHaveClass(/video-icon-active/);
+  await expect(firstCard.getByTestId("video-available-badge")).toHaveCount(0);
 
   const noOverflow = await firstCard.locator(".slot-player-link, .autofit-text, .autofit-input").evaluateAll((els) =>
     els.every((el) => {
